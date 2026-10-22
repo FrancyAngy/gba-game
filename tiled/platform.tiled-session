@@ -1,0 +1,50 @@
+{
+    "activeFile": "level_01.tmx",
+    "expandedProjectPaths": [
+        "."
+    ],
+    "fileStates": {
+        "level_01.tmx": {
+            "scale": 4.457083333333333,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 120.0336542955969,
+                "y": 109.48864167523605
+            }
+        },
+        "level_02.tmx": {
+            "scale": 4.457083333333333,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 120.0336542955969,
+                "y": 109.71300364588204
+            }
+        },
+        "tileset.tsx": {
+            "dynamicWrapping": true,
+            "scaleInDock": 8,
+            "scaleInEditor": 8
+        }
+    },
+    "last.imagePath": "/home/francy/Projects/Terra/gba-game/gfx",
+    "map.lastUsedFormat": "tmx",
+    "map.orientation": "1",
+    "map.tileHeight": 8,
+    "map.tileWidth": 8,
+    "openFiles": [
+        "level_01.tmx",
+        "tileset.tsx"
+    ],
+    "project": "platform.tiled-project",
+    "property.type": "bool",
+    "recentFiles": [
+        "tileset.tsx",
+        "level_01.tmx"
+    ],
+    "tileset.lastUsedFormat": "tsx",
+    "tileset.tileSize": {
+        "height": 8,
+        "width": 8
+    },
+    "tileset.type": 0
+}

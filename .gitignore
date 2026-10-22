@@ -1,1 +1,4 @@
 target
+*.gba
+*.sav
+*.ss0

@@ -1,13 +1,21 @@
 [package]
-name = "agb_template"
+name = "gba-game"
 version = "0.1.0"
-authors = [""]
+authors = ["FrancyAngy"]
 edition = "2024"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 agb = "0.25.0"
+gbfs = "0.3.2"
+
+[build-dependencies]
+image = { version = "0.25", default-features = false, features = ["png"] }
+cc = "1.9.0"
+proc-macro2 = "1.0.107"
+quote = "1.0.47"
+tiled = "0.16.0"
 
 [profile.dev]
 opt-level = 3

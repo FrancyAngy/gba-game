@@ -1,0 +1,3 @@
+[submodule "cpp_libs/gba-link-connection"]
+	path = cpp_libs/gba-link-connection
+	url = https://github.com/afska/gba-link-connection.git
