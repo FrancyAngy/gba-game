@@ -1,5 +1,5 @@
 {
-    "activeFile": "level_01.tmx",
+    "activeFile": "level_06.tmx",
     "expandedProjectPaths": [
         "."
     ],
@@ -9,15 +9,59 @@
             "selectedLayer": 0,
             "viewCenter": {
                 "x": 120.0336542955969,
-                "y": 109.48864167523605
+                "y": 80.09722352061327
             }
         },
         "level_02.tmx": {
+            "expandedObjectLayers": [
+                2
+            ],
+            "scale": 4.457083333333333,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 120.0336542955969,
+                "y": 80.09722352061327
+            }
+        },
+        "level_03.tmx": {
+            "expandedObjectLayers": [
+                2
+            ],
             "scale": 4.457083333333333,
             "selectedLayer": 0,
             "viewCenter": {
                 "x": 120.0336542955969,
-                "y": 109.71300364588204
+                "y": 80.09722352061327
+            }
+        },
+        "level_04.tmx": {
+            "expandedObjectLayers": [
+                2
+            ],
+            "scale": 4.457083333333333,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 120.0336542955969,
+                "y": 80.09722352061327
+            }
+        },
+        "level_05.tmx": {
+            "scale": 4.457083333333333,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 120.0336542955969,
+                "y": 80.09722352061327
+            }
+        },
+        "level_06.tmx": {
+            "expandedObjectLayers": [
+                2
+            ],
+            "scale": 4.457083333333333,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 120.0336542955969,
+                "y": 80.09722352061327
             }
         },
         "tileset.tsx": {
@@ -32,14 +76,24 @@
     "map.tileHeight": 8,
     "map.tileWidth": 8,
     "openFiles": [
+        "tileset.tsx",
         "level_01.tmx",
-        "tileset.tsx"
+        "level_02.tmx",
+        "level_03.tmx",
+        "level_04.tmx",
+        "level_05.tmx",
+        "level_06.tmx"
     ],
     "project": "platform.tiled-project",
     "property.type": "bool",
     "recentFiles": [
         "tileset.tsx",
-        "level_01.tmx"
+        "level_01.tmx",
+        "level_02.tmx",
+        "level_03.tmx",
+        "level_04.tmx",
+        "level_05.tmx",
+        "level_06.tmx"
     ],
     "tileset.lastUsedFormat": "tsx",
     "tileset.tileSize": {

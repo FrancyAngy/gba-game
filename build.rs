@@ -12,7 +12,14 @@ use quote::{ToTokens, quote};
 
 struct BuildResourceReader;
 
-static LEVELS: &[&str] = &["level_01.tmx", "level_02.tmx"];
+static LEVELS: &[&str] = &[
+    "level_01.tmx",
+    "level_02.tmx",
+    "level_03.tmx",
+    "level_04.tmx",
+    "level_05.tmx",
+    "level_06.tmx",
+];
 
 fn main() -> Result<(), Box<dyn Error>> {
     build_cpp_lib();
@@ -84,6 +91,8 @@ struct TileInfo {
     colliding: bool,
     win: bool,
     spike: bool,
+    water: bool,
+    water_top: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -121,6 +130,18 @@ impl ToTokens for Level {
                 .fold(0u8, |a, b| (a >> 1) | (b << 7))
         });
 
+        let water_map = self.tiles.chunks(8).map(|x| {
+            x.iter()
+                .map(|x| x.water as u8)
+                .fold(0u8, |a, b| (a >> 1) | (b << 7))
+        });
+
+        let water_top_map = self.tiles.chunks(8).map(|x| {
+            x.iter()
+                .map(|x| x.water_top as u8)
+                .fold(0u8, |a, b| (a >> 1) | (b << 7))
+        });
+
         let (player_x, player_y) = self.player_start;
         let (width, height) = self.size;
 
@@ -132,6 +153,8 @@ impl ToTokens for Level {
                 collision_map: &[#(#collision_map),*],
                 winning_map: &[#(#winning_map),*],
                 spike_map: &[#(#spike_map),*],
+                water_map: &[#(#water_map),*],
+                water_top_map: &[#(#water_top_map),*],
                 player_start: (#player_x, #player_y),
             }
         }
@@ -171,10 +194,27 @@ fn import_level(level: &str) -> Result<Level, Box<dyn Error>> {
                         spike = properties["SPIKE"] == PropertyValue::BoolValue(true);
                     }
 
+                    let mut water = false;
+
+                    if properties.contains_key("WATER") {
+                        water = properties["WATER"] == PropertyValue::BoolValue(true);
+                    }
+
+                    let mut water_top = false;
+
+                    if properties.contains_key("WATER_TOP") {
+                        if water == false {
+                            water = properties["WATER_TOP"] == PropertyValue::BoolValue(true);
+                        }
+                        water_top = properties["WATER_TOP"] == PropertyValue::BoolValue(true);
+                    }
+
                     TileInfo {
                         colliding,
                         win,
                         spike,
+                        water,
+                        water_top,
                         id: Some(tile.id()),
                     }
                 }
@@ -182,6 +222,8 @@ fn import_level(level: &str) -> Result<Level, Box<dyn Error>> {
                     colliding: false,
                     win: false,
                     spike: false,
+                    water: false,
+                    water_top: false,
                     id: None,
                 },
             };

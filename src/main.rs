@@ -24,6 +24,7 @@ use agb::{
     input::{Button, ButtonController, Tri},
     println,
 };
+
 // By default no_std crates don't get alloc, so you won't be able to use things like Vec
 // until you declare the extern crate. `agb` provides an allocator so it will all work
 extern crate alloc;
@@ -54,6 +55,8 @@ struct Level {
     collision_map: &'static [u8],
     winning_map: &'static [u8],
     spike_map: &'static [u8],
+    water_map: &'static [u8],
+    water_top_map: &'static [u8],
     player_start: (i32, i32),
 }
 
@@ -65,14 +68,18 @@ impl Level {
         )
     }
 
-    fn collides(&self, tile: Vector2D<i32>) -> bool {
+    fn collides(&self, tile: Vector2D<i32>) -> Tri {
         if !self.bounds().contains_point(tile) {
-            return false;
+            return Tri::Negative;
         }
 
         let idx = (tile.x + tile.y * self.width as i32) as usize;
 
-        self.collision_map[idx / 8] & (1 << (idx % 8)) != 0
+        if self.collision_map[idx / 8] & (1 << (idx % 8)) != 0 {
+            return Tri::Positive;
+        }
+
+        Tri::Zero
     }
 
     fn win_collision(&self, tile: Vector2D<i32>) -> bool {
@@ -93,6 +100,26 @@ impl Level {
         let idx = (tile.x + tile.y * self.width as i32) as usize;
 
         self.spike_map[idx / 8] & (1 << (idx % 8)) != 0
+    }
+
+    fn water_collision(&self, tile: Vector2D<i32>) -> bool {
+        if !self.bounds().contains_point(tile) {
+            return false;
+        }
+
+        let idx = (tile.x + tile.y * self.width as i32) as usize;
+
+        self.water_map[idx / 8] & (1 << (idx % 8)) != 0
+    }
+
+    fn water_top_collision(&self, tile: Vector2D<i32>) -> bool {
+        if !self.bounds().contains_point(tile) {
+            return false;
+        }
+
+        let idx = (tile.x + tile.y * self.width as i32) as usize;
+
+        self.water_top_map[idx / 8] & (1 << (idx % 8)) != 0
     }
 }
 
@@ -149,6 +176,14 @@ impl World {
         self.player.hits_spike(self.level)
     }
 
+    fn in_water(&self) -> bool {
+        self.player.hits_water(self.level)
+    }
+
+    fn collides(&self) -> Tri {
+        self.level.collides(self.player.pos.floor() / 8)
+    }
+
     fn update(&mut self, buttons: &ButtonController) {
         self.set_pos(vec2(0, 0));
         self.player.update(buttons, self.level);
@@ -161,6 +196,7 @@ struct Player {
     frame: usize,
     sprite: SpriteVram,
     flipped: bool,
+    was_in_water: bool,
 }
 
 impl Player {
@@ -171,6 +207,7 @@ impl Player {
             frame: 0,
             sprite: sprites::STANDING.sprite(0).into(),
             flipped: false,
+            was_in_water: false,
         }
     }
 
@@ -196,8 +233,12 @@ impl Player {
         self.speed.x = self.speed.x.clamp(num!(-2), num!(2))
     }
 
-    fn handle_jump(&mut self) {
-        self.speed.y -= num!(1.5);
+    fn handle_jump(&mut self, in_water: bool, in_top_water: bool) {
+        if in_water && !in_top_water {
+            self.speed.y = num!(-1);
+        } else {
+            self.speed.y -= num!(2.2);
+        }
     }
 
     fn update_sprite(&mut self) {
@@ -222,7 +263,7 @@ impl Player {
     fn is_on_ground(&self, level: &Level) -> bool {
         let check = vec2(self.pos.x, self.pos.y + 8 + Number::from_raw(1));
 
-        level.collides(check.floor() / 8)
+        level.collides(check.floor() / 8) == Tri::Positive
     }
 
     fn handle_collision_component(
@@ -248,10 +289,10 @@ impl Player {
 
     fn handle_collision(&mut self, level: &Level) {
         Self::handle_collision_component(&mut self.speed.x, &mut self.pos.x, 4, &|x| {
-            level.collides(vec2(x, self.pos.y.floor() / 8))
+            level.collides(vec2(x, self.pos.y.floor() / 8)) == Tri::Positive
         });
         Self::handle_collision_component(&mut self.speed.y, &mut self.pos.y, 8, &|y| {
-            level.collides(vec2(self.pos.x.floor() / 8, y))
+            level.collides(vec2(self.pos.x.floor() / 8, y)) == Tri::Positive
         });
     }
 
@@ -263,33 +304,59 @@ impl Player {
         level.spike_collision(self.pos.floor() / 8)
     }
 
+    fn hits_water(&self, level: &Level) -> bool {
+        level.water_collision(self.pos.floor() / 8)
+    }
+
+    fn hits_top_water(&self, level: &Level) -> bool {
+        level.water_top_collision(self.pos.floor() / 8)
+    }
+
     fn update(&mut self, buttons: &ButtonController, level: &Level) {
         let on_ground = self.is_on_ground(level);
+        let in_water = self.hits_water(level);
+        let in_top_water = self.hits_top_water(level);
 
         self.handle_horizontal_input(buttons.x_tri() as i32, on_ground);
 
-        if buttons.is_just_pressed(Button::A) && on_ground {
-            self.handle_jump();
+        if buttons.is_just_pressed(Button::A) && (on_ground || in_water) {
+            self.handle_jump(in_water, in_top_water);
         }
 
-        if (buttons.x_tri() == Tri::Zero
-            || (buttons.x_tri() == Tri::Positive && self.speed.x < num!(0))
-            || (buttons.x_tri() == Tri::Negative && self.speed.x > num!(0)))
-            && on_ground
+        if buttons.x_tri() == Tri::Zero {
+            if on_ground {
+                self.speed.x *= 12;
+                self.speed.x /= 16;
+            } else if in_water {
+                self.speed.x *= 63;
+                self.speed.x /= 64;
+            }
+        } else if (buttons.x_tri() == Tri::Positive && self.speed.x < num!(0))
+            || (buttons.x_tri() == Tri::Negative && self.speed.x > num!(0))
         {
-            self.speed.x *= 14;
+            self.speed.x *= 11;
             self.speed.x /= 16;
         }
 
-        if buttons.is_pressed(Button::A) {
-            self.speed.y += num!(0.04);
+        if !in_water {
+            if buttons.is_pressed(Button::A) {
+                self.speed.y += num!(0.08);
+            } else {
+                self.speed.y += num!(0.18);
+            }
         } else {
-            self.speed.y += num!(0.1);
+            self.speed.y = (self.speed.y + num!(0.04)).clamp(num!(-1.8), num!(2));
+        }
+
+        if !self.was_in_water && in_water {
+            self.speed.y = num!(-0.03)
         }
 
         self.handle_collision(level);
 
         self.update_sprite();
+
+        self.was_in_water = in_water;
     }
 }
 
@@ -323,7 +390,7 @@ fn main(mut gba: agb::Gba) -> ! {
             world = World::new(levels::LEVELS[level]);
         }
 
-        if world.spike_hit() {
+        if world.spike_hit() || world.collides() == Tri::Negative {
             world = World::new(levels::LEVELS[level])
         }
     }
