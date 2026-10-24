@@ -20,9 +20,10 @@ use agb::{
         },
     },
     fixnum::{Num, Rect, Vector2D, num, rect, vec2},
-    include_aseprite, include_background_gfx,
+    include_aseprite, include_background_gfx, include_wav,
     input::{Button, ButtonController, Tri},
     println,
+    sound::mixer::{Frequency, Mixer, SoundChannel, SoundData},
 };
 
 // By default no_std crates don't get alloc, so you won't be able to use things like Vec
@@ -38,6 +39,10 @@ mod levels {
 
     include!(concat!(env!("OUT_DIR"), "/levels.rs"));
 }
+
+static WATER_SFX: SoundData = include_wav!("sfx/water.wav");
+static JUMP_SFX: SoundData = include_wav!("sfx/jump.wav");
+static SWIM_SFX: SoundData = include_wav!("sfx/swim.wav");
 
 include_background_gfx!(mod tiles,
     "03adfc",
@@ -184,9 +189,9 @@ impl World {
         self.level.collides(self.player.pos.floor() / 8)
     }
 
-    fn update(&mut self, buttons: &ButtonController) {
+    fn update(&mut self, buttons: &ButtonController, mixer: &mut Mixer) {
         self.set_pos(vec2(0, 0));
-        self.player.update(buttons, self.level);
+        self.player.update(buttons, self.level, mixer);
     }
 }
 
@@ -233,11 +238,13 @@ impl Player {
         self.speed.x = self.speed.x.clamp(num!(-2), num!(2))
     }
 
-    fn handle_jump(&mut self, in_water: bool, in_top_water: bool) {
+    fn handle_jump(&mut self, in_water: bool, in_top_water: bool, mixer: &mut Mixer) {
         if in_water && !in_top_water {
             self.speed.y = num!(-1);
+            mixer.play_sound(SoundChannel::new(SWIM_SFX));
         } else {
             self.speed.y -= num!(2.2);
+            mixer.play_sound(SoundChannel::new(JUMP_SFX));
         }
     }
 
@@ -312,7 +319,7 @@ impl Player {
         level.water_top_collision(self.pos.floor() / 8)
     }
 
-    fn update(&mut self, buttons: &ButtonController, level: &Level) {
+    fn update(&mut self, buttons: &ButtonController, level: &Level, mixer: &mut Mixer) {
         let on_ground = self.is_on_ground(level);
         let in_water = self.hits_water(level);
         let in_top_water = self.hits_top_water(level);
@@ -320,7 +327,7 @@ impl Player {
         self.handle_horizontal_input(buttons.x_tri() as i32, on_ground);
 
         if buttons.is_just_pressed(Button::A) && (on_ground || in_water) {
-            self.handle_jump(in_water, in_top_water);
+            self.handle_jump(in_water, in_top_water, mixer);
         }
 
         if buttons.x_tri() == Tri::Zero {
@@ -349,7 +356,9 @@ impl Player {
         }
 
         if !self.was_in_water && in_water {
-            self.speed.y = num!(-0.03)
+            self.speed.x = num!(0);
+            self.speed.y = num!(-0.03);
+            mixer.play_sound(SoundChannel::new(WATER_SFX));
         }
 
         self.handle_collision(level);
@@ -366,6 +375,7 @@ impl Player {
 fn main(mut gba: agb::Gba) -> ! {
     let mut gfx = gba.graphics.get();
     let mut buttons = ButtonController::new();
+    let mut mixer = gba.mixer.mixer(Frequency::Hz32768);
 
     gfx.set_background_palettes(tiles::PALETTES);
 
@@ -376,7 +386,7 @@ fn main(mut gba: agb::Gba) -> ! {
     loop {
         buttons.update();
 
-        world.update(&buttons);
+        world.update(&buttons, &mut mixer);
 
         let mut frame = gfx.frame();
 
@@ -393,5 +403,7 @@ fn main(mut gba: agb::Gba) -> ! {
         if world.spike_hit() || world.collides() == Tri::Negative {
             world = World::new(levels::LEVELS[level])
         }
+
+        mixer.frame();
     }
 }
