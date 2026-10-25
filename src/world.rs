@@ -14,6 +14,7 @@ pub struct World {
     pub level: &'static super::level::Level,
     pub bg: InfiniteScrolledMap,
     pub player: super::player::Player,
+    bg_pos: Vector2D<i32>,
 }
 
 impl World {
@@ -30,6 +31,7 @@ impl World {
             level,
             bg,
             player: super::player::Player::new(level.player_start.into()),
+            bg_pos: vec2(0, 0),
         }
     }
 
@@ -63,16 +65,12 @@ impl World {
         self.player.hits_spike(self.level)
     }
 
-    pub fn in_water(&self) -> bool {
-        self.player.hits_water(self.level)
-    }
-
     pub fn collides(&self) -> Tri {
         self.level.collides(self.player.pos.floor() / 8)
     }
 
     pub fn update(&mut self, buttons: &ButtonController, mixer: &mut Mixer) {
-        self.set_pos(vec2(0, 0));
+        self.set_pos(self.bg_pos);
         self.player.update(buttons, self.level, mixer);
     }
 }

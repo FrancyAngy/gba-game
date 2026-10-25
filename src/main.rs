@@ -31,6 +31,14 @@ mod player;
 mod shim;
 mod world;
 
+mod levels {
+    use super::level::Level;
+    use agb::display::tiled::TileSetting;
+    static TILES: &[TileSetting] = super::tiles::TILES.tile_settings;
+
+    include!(concat!(env!("OUT_DIR"), "/levels.rs"));
+}
+
 static WATER_SFX: SoundData = include_wav!("sfx/water.wav");
 static JUMP_SFX: SoundData = include_wav!("sfx/jump.wav");
 static SWIM_SFX: SoundData = include_wav!("sfx/swim.wav");
@@ -40,7 +48,8 @@ include_background_gfx!(mod tiles,
 "03adfc",
 TILES => "gfx/tileset.png",
 HEALTH => "gfx/health.aseprite",
-GAMEOVER => deduplicate "gfx/gameover.aseprite"
+GAMEOVER => deduplicate "gfx/gameover.aseprite",
+WIN => deduplicate "gfx/win.aseprite",
 );
 
 include_aseprite!(mod sprites, "gfx/sprites.aseprite");
@@ -63,9 +72,10 @@ fn main(mut gba: agb::Gba) -> ! {
 
     let mut level = 0;
     let mut lives = START_LIVES;
-    let mut world = world::World::new(level::levels::LEVELS[level]);
+    let mut world = world::World::new(levels::LEVELS[level]);
     let mut respawn_timer = 0;
-    let mut gameover = false;
+    let mut game_status = Tri::Zero;
+    let mut status_setup = false;
 
     let mut player_health_background = RegularBackground::new(
         Priority::P0,
@@ -73,19 +83,17 @@ fn main(mut gba: agb::Gba) -> ! {
         TileFormat::FourBpp,
     );
 
-    let mut gameover_background = RegularBackground::new(
+    let mut status_background = RegularBackground::new(
         Priority::P0,
         RegularBackgroundSize::Background32x32,
         TileFormat::FourBpp,
     );
 
-    gameover_background.fill_with(&tiles::GAMEOVER);
-
     loop {
         let mut frame = gfx.frame();
         buttons.update();
 
-        if !gameover {
+        if game_status == Tri::Zero {
             for i in 0..4 {
                 player_health_background.set_tile(
                     (i as i32 + 1, 0),
@@ -108,11 +116,11 @@ fn main(mut gba: agb::Gba) -> ! {
 
                 if world.has_won() {
                     level += 1;
-                    level %= level::levels::LEVELS.len();
-                    if level == 0 {
-                        lives = START_LIVES;
+                    if level == levels::LEVELS.len() {
+                        game_status = Tri::Positive;
+                    } else {
+                        world = world::World::new(levels::LEVELS[level]);
                     }
-                    world = world::World::new(level::levels::LEVELS[level]);
                 }
 
                 if world.spike_hit() || world.collides() == Tri::Negative {
@@ -125,9 +133,9 @@ fn main(mut gba: agb::Gba) -> ! {
                 respawn_timer -= 1;
                 if respawn_timer == 0 {
                     if lives == 0 {
-                        gameover = true;
+                        game_status = Tri::Negative;
                     } else {
-                        world = world::World::new(level::levels::LEVELS[level]);
+                        world = world::World::new(levels::LEVELS[level]);
                     }
                 }
             }
@@ -135,12 +143,22 @@ fn main(mut gba: agb::Gba) -> ! {
             player_health_background.show(&mut frame);
             world.show(&mut frame);
         } else {
-            gameover_background.show(&mut frame);
-            if buttons.is_just_pressed(Button::A) {
-                gameover = false;
-                lives = START_LIVES;
-                level = 0;
-                world = world::World::new(level::levels::LEVELS[level]);
+            if !status_setup {
+                if game_status == Tri::Positive {
+                    status_background.fill_with(&tiles::WIN);
+                } else {
+                    status_background.fill_with(&tiles::GAMEOVER);
+                }
+                status_setup = true;
+            } else {
+                status_background.show(&mut frame);
+                if buttons.is_just_pressed(Button::A) {
+                    game_status = Tri::Zero;
+                    status_setup = false;
+                    lives = START_LIVES;
+                    level = 0;
+                    world = world::World::new(levels::LEVELS[level]);
+                }
             }
         }
         frame.commit();

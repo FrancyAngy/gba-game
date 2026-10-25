@@ -75,6 +75,7 @@
     "map.orientation": "1",
     "map.tileHeight": 8,
     "map.tileWidth": 8,
+    "map.width": 35,
     "openFiles": [
         "tileset.tsx",
         "level_01.tmx",

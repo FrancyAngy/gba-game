@@ -1,3 +1,4 @@
+#[allow(dead_code)]
 unsafe extern "C" {
     fn shim_card_init();
     fn shim_card_get_device(cancel: extern "C" fn() -> bool) -> i32;

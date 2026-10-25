@@ -4,14 +4,6 @@ use agb::{
     input::Tri,
 };
 
-pub mod levels {
-    use super::Level;
-    use agb::display::tiled::TileSetting;
-    static TILES: &[TileSetting] = super::super::tiles::TILES.tile_settings;
-
-    include!(concat!(env!("OUT_DIR"), "/levels.rs"));
-}
-
 pub struct Level {
     pub width: u32,
     pub height: u32,
