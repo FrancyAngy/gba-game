@@ -1,6 +1,6 @@
 use agb::{
     display::{
-        GraphicsFrame,
+        GraphicsFrame, Priority,
         object::{Object, SpriteVram},
     },
     fixnum::{Vector2D, num, vec2},
@@ -16,8 +16,8 @@ pub struct Player {
     pub flipped: bool,
     pub was_in_water: bool,
     pub hide: bool,
+    pub walljump_state: i32,
     can_jump: i32,
-    walljump_state: i32,
     walljump_timer: i32,
 }
 
@@ -46,6 +46,7 @@ impl Player {
             Object::new(self.sprite.clone())
                 .set_hflip(self.flipped)
                 .set_pos(self.pos.round() - vec2(8, 8))
+                .set_priority(Priority::P1)
                 .show(frame);
         }
     }

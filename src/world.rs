@@ -14,13 +14,14 @@ pub struct World {
     pub level: &'static super::level::Level,
     pub bg: InfiniteScrolledMap,
     pub player: super::player::Player,
+    pub started: bool,
     bg_pos: Vector2D<i32>,
 }
 
 impl World {
     pub fn new(level: &'static super::level::Level) -> Self {
         let bg = RegularBackground::new(
-            Priority::P1,
+            Priority::P2,
             RegularBackgroundSize::Background32x32,
             TileFormat::FourBpp,
         );
@@ -32,6 +33,7 @@ impl World {
             bg,
             player: super::player::Player::new(level.player_start.into()),
             bg_pos: vec2(0, 0),
+            started: true,
         }
     }
 
@@ -54,7 +56,9 @@ impl World {
 
     pub fn show(&self, frame: &mut GraphicsFrame) {
         self.bg.show(frame);
-        self.player.show(frame);
+        if self.started {
+            self.player.show(frame);
+        }
     }
 
     pub fn has_won(&self) -> bool {
@@ -71,6 +75,8 @@ impl World {
 
     pub fn update(&mut self, buttons: &ButtonController, mixer: &mut Mixer) {
         self.set_pos(self.bg_pos);
-        self.player.update(buttons, self.level, mixer);
+        if self.started {
+            self.player.update(buttons, self.level, mixer);
+        }
     }
 }

@@ -16,7 +16,7 @@ use agb::{
         Priority,
         tiled::{RegularBackground, RegularBackgroundSize, TileFormat},
     },
-    fixnum::{Num, Vector2D},
+    fixnum::{Num, Vector2D, num},
     include_aseprite, include_background_gfx, include_wav,
     input::{Button, ButtonController, Tri},
     sound::mixer::{Frequency, SoundChannel, SoundData},
@@ -50,6 +50,7 @@ TILES => "gfx/tileset.png",
 HEALTH => "gfx/health.aseprite",
 GAMEOVER => deduplicate "gfx/gameover.aseprite",
 WIN => deduplicate "gfx/win.aseprite",
+TITLE => deduplicate "gfx/title.aseprite",
 );
 
 include_aseprite!(mod sprites, "gfx/sprites.aseprite");
@@ -89,78 +90,95 @@ fn main(mut gba: agb::Gba) -> ! {
         TileFormat::FourBpp,
     );
 
+    world.started = false;
+    world.player.pos.y = num!(0);
+    world.player.walljump_state = 2;
+
+    status_background.fill_with(&tiles::TITLE);
+
     loop {
         let mut frame = gfx.frame();
         buttons.update();
 
-        if game_status == Tri::Zero {
-            for i in 0..4 {
-                player_health_background.set_tile(
-                    (i as i32 + 1, 0),
-                    &tiles::HEALTH.tiles,
-                    tiles::HEALTH.tile_settings[i as usize],
-                );
-            }
-
-            for i in 0..(START_LIVES as i32) {
-                let tile = if i < lives as i32 { 5 } else { 4 };
-                player_health_background.set_tile(
-                    (i + 5, 0),
-                    &tiles::HEALTH.tiles,
-                    tiles::HEALTH.tile_settings[tile as usize],
-                );
-            }
-
-            if respawn_timer == 0 {
-                world.update(&buttons, &mut mixer);
-
-                if world.has_won() {
-                    level += 1;
-                    if level == levels::LEVELS.len() {
-                        game_status = Tri::Positive;
-                    } else {
-                        world = world::World::new(levels::LEVELS[level]);
-                    }
+        if world.started {
+            if game_status == Tri::Zero {
+                for i in 0..4 {
+                    player_health_background.set_tile(
+                        (i as i32 + 1, 0),
+                        &tiles::HEALTH.tiles,
+                        tiles::HEALTH.tile_settings[i as usize],
+                    );
                 }
 
-                if world.spike_hit() || world.collides() == Tri::Negative {
-                    mixer.play_sound(SoundChannel::new(DEATH_SFX));
-                    lives -= 1;
-                    respawn_timer = RESPAWN_TIME;
-                    world.player.die();
+                for i in 0..(START_LIVES as i32) {
+                    let tile = if i < lives as i32 { 5 } else { 4 };
+                    player_health_background.set_tile(
+                        (i + 5, 0),
+                        &tiles::HEALTH.tiles,
+                        tiles::HEALTH.tile_settings[tile as usize],
+                    );
                 }
-            } else {
-                respawn_timer -= 1;
+
                 if respawn_timer == 0 {
-                    if lives == 0 {
-                        game_status = Tri::Negative;
+                    world.update(&buttons, &mut mixer);
+
+                    if world.has_won() {
+                        level += 1;
+                        if level == levels::LEVELS.len() {
+                            game_status = Tri::Positive;
+                        } else {
+                            world = world::World::new(levels::LEVELS[level]);
+                        }
+                    }
+
+                    if world.spike_hit() || world.collides() == Tri::Negative {
+                        mixer.play_sound(SoundChannel::new(DEATH_SFX));
+                        lives -= 1;
+                        respawn_timer = RESPAWN_TIME;
+                        world.player.die();
+                    }
+                } else {
+                    respawn_timer -= 1;
+                    if respawn_timer == 0 {
+                        if lives == 0 {
+                            game_status = Tri::Negative;
+                        } else {
+                            world = world::World::new(levels::LEVELS[level]);
+                        }
+                    }
+                }
+
+                player_health_background.show(&mut frame);
+                world.show(&mut frame);
+            } else {
+                if !status_setup {
+                    if game_status == Tri::Positive {
+                        status_background.fill_with(&tiles::WIN);
                     } else {
+                        status_background.fill_with(&tiles::GAMEOVER);
+                    }
+                    status_setup = true;
+                } else {
+                    status_background.show(&mut frame);
+                    if buttons.is_just_pressed(Button::A) {
+                        game_status = Tri::Zero;
+                        status_setup = false;
+                        lives = START_LIVES;
+                        level = 0;
                         world = world::World::new(levels::LEVELS[level]);
                     }
                 }
             }
-
-            player_health_background.show(&mut frame);
-            world.show(&mut frame);
         } else {
-            if !status_setup {
-                if game_status == Tri::Positive {
-                    status_background.fill_with(&tiles::WIN);
-                } else {
-                    status_background.fill_with(&tiles::GAMEOVER);
-                }
-                status_setup = true;
-            } else {
-                status_background.show(&mut frame);
-                if buttons.is_just_pressed(Button::A) {
-                    game_status = Tri::Zero;
-                    status_setup = false;
-                    lives = START_LIVES;
-                    level = 0;
-                    world = world::World::new(levels::LEVELS[level]);
-                }
+            world.update(&buttons, &mut mixer);
+
+            status_background.show(&mut frame);
+            world.show(&mut frame);
+            if buttons.is_just_pressed(Button::A) {
+                world.started = true;
             }
         }
+
         frame.commit();
         mixer.frame();
     }

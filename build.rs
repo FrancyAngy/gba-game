@@ -19,6 +19,7 @@ static LEVELS: &[&str] = &[
     "level_04.tmx",
     "level_05.tmx",
     "level_06.tmx",
+    "level_07.tmx",
 ];
 
 fn main() -> Result<(), Box<dyn Error>> {
