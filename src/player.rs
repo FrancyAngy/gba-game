@@ -5,8 +5,14 @@ use agb::{
     },
     fixnum::{Vector2D, num, vec2},
     input::{Button, ButtonController, Tri},
-    sound::mixer::{Mixer, SoundChannel},
+    sound::mixer::{ChannelId, Mixer, SoundChannel},
 };
+
+#[derive(Eq, PartialEq)]
+pub enum ContinuousSfxId {
+    None,
+    Slide,
+}
 
 pub struct Player {
     pub pos: super::Vector,
@@ -17,6 +23,8 @@ pub struct Player {
     pub was_in_water: bool,
     pub hide: bool,
     pub walljump_state: i32,
+    pub continuous_sfx: Option<ChannelId>,
+    pub continuous_sfx_id: ContinuousSfxId,
     can_jump: i32,
     walljump_timer: i32,
 }
@@ -34,6 +42,8 @@ impl Player {
             can_jump: 0,
             walljump_state: 0,
             walljump_timer: 0,
+            continuous_sfx: None,
+            continuous_sfx_id: ContinuousSfxId::None,
         }
     }
 
@@ -76,12 +86,13 @@ impl Player {
         }
     }
 
-    pub fn handle_wall_jump(&mut self, touches_left: bool) {
+    pub fn handle_wall_jump(&mut self, touches_left: bool, mixer: &mut Mixer) {
         self.speed.x = num!(-1);
         if touches_left {
             self.speed.x *= -1;
         }
         self.speed.y = num!(-2.2);
+        mixer.play_sound(SoundChannel::new(super::JUMP_SFX));
     }
 
     pub fn update_sprite(&mut self) {
@@ -243,7 +254,7 @@ impl Player {
         }
 
         if self.walljump_state == 1 && buttons.is_just_pressed(Button::A) {
-            self.handle_wall_jump(touch_left);
+            self.handle_wall_jump(touch_left, mixer);
             self.walljump_state = 2;
             self.walljump_timer = 3;
         } else if self.walljump_state == 1 {
@@ -256,6 +267,25 @@ impl Player {
 
         if self.walljump_timer > 0 {
             self.walljump_timer -= 1;
+        }
+
+        if self.walljump_state == 1 && self.continuous_sfx.is_none() {
+            let mut sfx = SoundChannel::new(super::SLIDE_SFX);
+            sfx.should_loop();
+
+            self.continuous_sfx = mixer.play_sound(sfx);
+            self.continuous_sfx_id = ContinuousSfxId::Slide;
+        }
+
+        if self.walljump_state != 1
+            && self.continuous_sfx_id == ContinuousSfxId::Slide
+            && !self.continuous_sfx.is_none()
+        {
+            if let Some(id) = self.continuous_sfx.take() {
+                if let Some(channel) = mixer.channel(&id) {
+                    channel.stop();
+                }
+            }
         }
 
         self.handle_collision(level);

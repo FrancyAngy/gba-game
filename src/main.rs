@@ -43,6 +43,7 @@ static WATER_SFX: SoundData = include_wav!("sfx/water.wav");
 static JUMP_SFX: SoundData = include_wav!("sfx/jump.wav");
 static SWIM_SFX: SoundData = include_wav!("sfx/swim.wav");
 static DEATH_SFX: SoundData = include_wav!("sfx/death.wav");
+static SLIDE_SFX: SoundData = include_wav!("sfx/slide.wav");
 
 include_background_gfx!(mod tiles,
 "03adfc",
