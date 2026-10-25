@@ -17,6 +17,8 @@ pub struct Player {
     pub was_in_water: bool,
     pub hide: bool,
     can_jump: i32,
+    walljump_state: i32,
+    walljump_timer: i32,
 }
 
 impl Player {
@@ -30,6 +32,8 @@ impl Player {
             was_in_water: false,
             hide: false,
             can_jump: 0,
+            walljump_state: 0,
+            walljump_timer: 0,
         }
     }
 
@@ -71,6 +75,14 @@ impl Player {
         }
     }
 
+    pub fn handle_wall_jump(&mut self, touches_left: bool) {
+        self.speed.x = num!(-1);
+        if touches_left {
+            self.speed.x *= -1;
+        }
+        self.speed.y = num!(-2.2);
+    }
+
     pub fn update_sprite(&mut self) {
         if self.speed.x > num!(0) {
             self.flipped = false;
@@ -92,6 +104,18 @@ impl Player {
 
     pub fn is_on_ground(&self, level: &super::level::Level) -> bool {
         let check = vec2(self.pos.x, self.pos.y + 8 + super::Number::from_raw(1));
+
+        level.collides(check.floor() / 8) == Tri::Positive
+    }
+
+    pub fn touches_left_wall(&self, level: &super::level::Level) -> bool {
+        let check = vec2(self.pos.x - 5 - super::Number::from_raw(1), self.pos.y);
+
+        level.collides(check.floor() / 8) == Tri::Positive
+    }
+
+    pub fn touches_right_wall(&self, level: &super::level::Level) -> bool {
+        let check = vec2(self.pos.x + 4 + super::Number::from_raw(1), self.pos.y);
 
         level.collides(check.floor() / 8) == Tri::Positive
     }
@@ -151,22 +175,33 @@ impl Player {
         let on_ground = self.is_on_ground(level);
         let in_water = self.hits_water(level);
         let in_top_water = self.hits_top_water(level);
+        let touch_left = self.touches_left_wall(level);
+        let touch_right = self.touches_right_wall(level);
+        let x_tri = buttons.x_tri();
 
-        if on_ground && self.can_jump != 10 {
+        if on_ground && (self.can_jump != 10 || self.walljump_state == 2) {
             self.can_jump = 10;
+            self.walljump_state = 0;
         } else if (in_water && self.can_jump != 0) || (self.speed.y <= num!(-1)) {
             self.can_jump = 0;
         } else if self.can_jump > 0 {
             self.can_jump -= 1;
         }
 
-        self.handle_horizontal_input(buttons.x_tri() as i32, on_ground);
+        if in_water && self.walljump_state != 0 {
+            self.walljump_state = 0;
+            self.walljump_timer = 0;
+        }
+
+        if self.walljump_state != 2 {
+            self.handle_horizontal_input(x_tri as i32, on_ground);
+        }
 
         if buttons.is_just_pressed(Button::A) && (self.can_jump > 0 || in_water) {
             self.handle_jump(in_water, in_top_water, mixer);
         }
 
-        if buttons.x_tri() == Tri::Zero {
+        if x_tri == Tri::Zero {
             if on_ground {
                 self.speed.x *= 12;
                 self.speed.x /= 16;
@@ -174,8 +209,9 @@ impl Player {
                 self.speed.x *= 63;
                 self.speed.x /= 64;
             }
-        } else if (buttons.x_tri() == Tri::Positive && self.speed.x < num!(0))
-            || (buttons.x_tri() == Tri::Negative && self.speed.x > num!(0))
+        } else if ((x_tri == Tri::Positive && self.speed.x < num!(0))
+            || (x_tri == Tri::Negative && self.speed.x > num!(0)))
+            && self.walljump_state != 2
         {
             self.speed.x *= 11;
             self.speed.x /= 16;
@@ -195,6 +231,30 @@ impl Player {
             self.speed.x = num!(0);
             self.speed.y = num!(-0.03);
             mixer.play_sound(SoundChannel::new(super::WATER_SFX));
+        }
+
+        if ((touch_left && x_tri == Tri::Negative) || (touch_right && x_tri == Tri::Positive))
+            && !on_ground
+            && !in_water
+            && self.walljump_timer == 0
+        {
+            self.walljump_state = 1;
+        }
+
+        if self.walljump_state == 1 && buttons.is_just_pressed(Button::A) {
+            self.handle_wall_jump(touch_left);
+            self.walljump_state = 2;
+            self.walljump_timer = 3;
+        } else if self.walljump_state == 1 {
+            self.speed.y = num!(0.4);
+        }
+
+        if self.walljump_state == 1 && (!(touch_right || touch_left) || on_ground || in_water) {
+            self.walljump_state = 0;
+        }
+
+        if self.walljump_timer > 0 {
+            self.walljump_timer -= 1;
         }
 
         self.handle_collision(level);
