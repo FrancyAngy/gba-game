@@ -136,7 +136,7 @@ fn main(mut gba: agb::Gba) -> ! {
                         mixer.play_sound(SoundChannel::new(DEATH_SFX));
                         lives -= 1;
                         respawn_timer = RESPAWN_TIME;
-                        world.player.die();
+                        world.player.die(&mut mixer);
                     }
                 } else {
                     respawn_timer -= 1;

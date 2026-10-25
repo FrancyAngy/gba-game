@@ -47,8 +47,13 @@ impl Player {
         }
     }
 
-    pub fn die(&mut self) {
+    pub fn die(&mut self, mixer: &mut Mixer) {
         self.hide = true;
+        if let Some(id) = self.continuous_sfx.take() {
+            if let Some(channel) = mixer.channel(&id) {
+                channel.stop();
+            }
+        }
     }
 
     pub fn show(&self, frame: &mut GraphicsFrame) {
@@ -249,6 +254,7 @@ impl Player {
             && !on_ground
             && !in_water
             && self.walljump_timer == 0
+            && buttons.is_released(Button::A)
         {
             self.walljump_state = 1;
         }
