@@ -16,6 +16,7 @@ pub struct Player {
     pub flipped: bool,
     pub was_in_water: bool,
     pub hide: bool,
+    can_jump: i32,
 }
 
 impl Player {
@@ -28,6 +29,7 @@ impl Player {
             flipped: false,
             was_in_water: false,
             hide: false,
+            can_jump: 0,
         }
     }
 
@@ -64,7 +66,7 @@ impl Player {
             self.speed.y = num!(-1);
             mixer.play_sound(SoundChannel::new(super::SWIM_SFX));
         } else {
-            self.speed.y -= num!(2.2);
+            self.speed.y = num!(-2.2);
             mixer.play_sound(SoundChannel::new(super::JUMP_SFX));
         }
     }
@@ -150,9 +152,17 @@ impl Player {
         let in_water = self.hits_water(level);
         let in_top_water = self.hits_top_water(level);
 
+        if on_ground && self.can_jump != 10 {
+            self.can_jump = 10;
+        } else if (in_water && self.can_jump != 0) || (self.speed.y <= num!(-1)) {
+            self.can_jump = 0;
+        } else if self.can_jump > 0 {
+            self.can_jump -= 1;
+        }
+
         self.handle_horizontal_input(buttons.x_tri() as i32, on_ground);
 
-        if buttons.is_just_pressed(Button::A) && (on_ground || in_water) {
+        if buttons.is_just_pressed(Button::A) && (self.can_jump > 0 || in_water) {
             self.handle_jump(in_water, in_top_water, mixer);
         }
 

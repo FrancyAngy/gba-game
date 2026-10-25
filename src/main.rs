@@ -18,11 +18,9 @@ use agb::{
     },
     fixnum::{Num, Vector2D},
     include_aseprite, include_background_gfx, include_wav,
-    input::{ButtonController, Tri},
+    input::{Button, ButtonController, Tri},
     sound::mixer::{Frequency, SoundChannel, SoundData},
 };
-
-use crate::tiles::HEALTH;
 
 // By default no_std crates don't get alloc, so you won't be able to use things like Vec
 // until you declare the extern crate. `agb` provides an allocator so it will all work
@@ -41,7 +39,8 @@ static DEATH_SFX: SoundData = include_wav!("sfx/death.wav");
 include_background_gfx!(mod tiles,
 "03adfc",
 TILES => "gfx/tileset.png",
-HEALTH => "gfx/health.aseprite"
+HEALTH => "gfx/health.aseprite",
+GAMEOVER => deduplicate "gfx/gameover.aseprite"
 );
 
 include_aseprite!(mod sprites, "gfx/sprites.aseprite");
@@ -66,6 +65,7 @@ fn main(mut gba: agb::Gba) -> ! {
     let mut lives = START_LIVES;
     let mut world = world::World::new(level::levels::LEVELS[level]);
     let mut respawn_timer = 0;
+    let mut gameover = false;
 
     let mut player_health_background = RegularBackground::new(
         Priority::P0,
@@ -73,60 +73,77 @@ fn main(mut gba: agb::Gba) -> ! {
         TileFormat::FourBpp,
     );
 
+    let mut gameover_background = RegularBackground::new(
+        Priority::P0,
+        RegularBackgroundSize::Background32x32,
+        TileFormat::FourBpp,
+    );
+
+    gameover_background.fill_with(&tiles::GAMEOVER);
+
     loop {
-        buttons.update();
         let mut frame = gfx.frame();
+        buttons.update();
 
-        for i in 0..4 {
-            player_health_background.set_tile(
-                (i + 1, 0),
-                &tiles::HEALTH.tiles,
-                tiles::HEALTH.tile_settings[i as usize],
-            );
-        }
-
-        for i in 0..(START_LIVES as i32) {
-            let tile = if i < lives as i32 { 5 } else { 4 };
-            player_health_background.set_tile(
-                (i + 5, 0),
-                &tiles::HEALTH.tiles,
-                tiles::HEALTH.tile_settings[tile as usize],
-            );
-        }
-
-        if respawn_timer == 0 {
-            world.update(&buttons, &mut mixer);
-
-            if world.has_won() {
-                level += 1;
-                level %= level::levels::LEVELS.len();
-                if level == 0 {
-                    lives = START_LIVES;
-                }
-                world = world::World::new(level::levels::LEVELS[level]);
+        if !gameover {
+            for i in 0..4 {
+                player_health_background.set_tile(
+                    (i as i32 + 1, 0),
+                    &tiles::HEALTH.tiles,
+                    tiles::HEALTH.tile_settings[i as usize],
+                );
             }
 
-            if world.spike_hit() || world.collides() == Tri::Negative {
-                mixer.play_sound(SoundChannel::new(DEATH_SFX));
-                lives -= 1;
-                respawn_timer = RESPAWN_TIME;
-                world.player.die();
+            for i in 0..(START_LIVES as i32) {
+                let tile = if i < lives as i32 { 5 } else { 4 };
+                player_health_background.set_tile(
+                    (i + 5, 0),
+                    &tiles::HEALTH.tiles,
+                    tiles::HEALTH.tile_settings[tile as usize],
+                );
             }
-        } else {
-            respawn_timer -= 1;
+
             if respawn_timer == 0 {
-                if lives == 0 {
-                    lives = START_LIVES;
-                    level = 0;
+                world.update(&buttons, &mut mixer);
+
+                if world.has_won() {
+                    level += 1;
+                    level %= level::levels::LEVELS.len();
+                    if level == 0 {
+                        lives = START_LIVES;
+                    }
+                    world = world::World::new(level::levels::LEVELS[level]);
                 }
+
+                if world.spike_hit() || world.collides() == Tri::Negative {
+                    mixer.play_sound(SoundChannel::new(DEATH_SFX));
+                    lives -= 1;
+                    respawn_timer = RESPAWN_TIME;
+                    world.player.die();
+                }
+            } else {
+                respawn_timer -= 1;
+                if respawn_timer == 0 {
+                    if lives == 0 {
+                        gameover = true;
+                    } else {
+                        world = world::World::new(level::levels::LEVELS[level]);
+                    }
+                }
+            }
+
+            player_health_background.show(&mut frame);
+            world.show(&mut frame);
+        } else {
+            gameover_background.show(&mut frame);
+            if buttons.is_just_pressed(Button::A) {
+                gameover = false;
+                lives = START_LIVES;
+                level = 0;
                 world = world::World::new(level::levels::LEVELS[level]);
             }
         }
-
-        player_health_background.show(&mut frame);
-        world.show(&mut frame);
         frame.commit();
-
         mixer.frame();
     }
 }
