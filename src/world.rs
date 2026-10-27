@@ -98,6 +98,18 @@ impl World {
                     entity.handle_player_collision(&mut self.player, mixer);
                 }
             }
+
+            for i in 0..self.entities.len() {
+                let (done, todo) = self.entities.split_at_mut(i + 1);
+                let checking = &mut done[i];
+                for entity in todo {
+                    if checking.get_rect().touches(entity.get_rect()) {
+                        checking.handle_entity_collision(entity.as_mut());
+                        entity.handle_entity_collision(checking.as_mut());
+                    }
+                }
+            }
+
             self.entities
                 .retain_mut(|entity| entity.update(&mut self.player, mixer));
 
