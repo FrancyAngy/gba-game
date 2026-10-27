@@ -16,11 +16,14 @@ use agb::{
         Priority,
         tiled::{RegularBackground, RegularBackgroundSize, TileFormat},
     },
-    fixnum::{Num, Vector2D, num},
+    fixnum::{Num, Vector2D, num, vec2},
     include_aseprite, include_background_gfx, include_wav,
     input::{Button, ButtonController, Tri},
     sound::mixer::{Frequency, SoundChannel, SoundData},
 };
+use alloc::boxed::Box;
+
+use crate::world::object_traits::Collectible;
 
 // By default no_std crates don't get alloc, so you won't be able to use things like Vec
 // until you declare the extern crate. `agb` provides an allocator so it will all work
@@ -39,12 +42,6 @@ mod levels {
     include!(concat!(env!("OUT_DIR"), "/levels.rs"));
 }
 
-static WATER_SFX: SoundData = include_wav!("sfx/water.wav");
-static JUMP_SFX: SoundData = include_wav!("sfx/jump.wav");
-static SWIM_SFX: SoundData = include_wav!("sfx/swim.wav");
-static DEATH_SFX: SoundData = include_wav!("sfx/death.wav");
-static SLIDE_SFX: SoundData = include_wav!("sfx/slide.wav");
-
 include_background_gfx!(mod tiles,
 "03adfc",
 TILES => "gfx/tileset.png",
@@ -54,7 +51,7 @@ WIN => deduplicate "gfx/win.aseprite",
 TITLE => deduplicate "gfx/title.aseprite",
 );
 
-include_aseprite!(mod sprites, "gfx/sprites.aseprite");
+static DEATH_SFX: SoundData = include_wav!("sfx/death.wav");
 
 type Number = Num<i32, 8>;
 type Vector = Vector2D<Number>;

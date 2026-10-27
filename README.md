@@ -10,7 +10,9 @@ Touching a wall while in the air, with the A button released and holding the dir
 While sliding, you can press the opposite direction on the dpad to stop sliding or press the A button to perform a wall jump.
 
 ## Building
-In order to build a somewhat recent version of rustup/cargo is required.
+The requirements are:
+- Cargo
+- arm-none-eabi gnu toolchain
 
 Just run:
 

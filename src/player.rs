@@ -4,8 +4,9 @@ use agb::{
         object::{Object, SpriteVram},
     },
     fixnum::{Vector2D, num, vec2},
+    include_aseprite, include_wav,
     input::{Button, ButtonController, Tri},
-    sound::mixer::{ChannelId, Mixer, SoundChannel},
+    sound::mixer::{ChannelId, Mixer, SoundChannel, SoundData},
 };
 
 #[derive(Eq, PartialEq)]
@@ -13,6 +14,13 @@ pub enum ContinuousSfxId {
     None,
     Slide,
 }
+
+include_aseprite!(mod sprites, "gfx/player.aseprite");
+
+static WATER_SFX: SoundData = include_wav!("sfx/water.wav");
+static JUMP_SFX: SoundData = include_wav!("sfx/jump.wav");
+static SWIM_SFX: SoundData = include_wav!("sfx/swim.wav");
+static SLIDE_SFX: SoundData = include_wav!("sfx/slide.wav");
 
 pub struct Player {
     pub pos: super::Vector,
@@ -35,7 +43,7 @@ impl Player {
             pos: start.change_base(),
             speed: vec2(num!(0), num!(0)),
             frame: 0,
-            sprite: super::sprites::STANDING.sprite(0).into(),
+            sprite: sprites::STANDING.sprite(0).into(),
             flipped: false,
             was_in_water: false,
             hide: false,
@@ -84,10 +92,10 @@ impl Player {
     pub fn handle_jump(&mut self, in_water: bool, in_top_water: bool, mixer: &mut Mixer) {
         if in_water && !in_top_water {
             self.speed.y = num!(-1);
-            mixer.play_sound(SoundChannel::new(super::SWIM_SFX));
+            mixer.play_sound(SoundChannel::new(SWIM_SFX));
         } else {
             self.speed.y = num!(-2.2);
-            mixer.play_sound(SoundChannel::new(super::JUMP_SFX));
+            mixer.play_sound(SoundChannel::new(JUMP_SFX));
         }
     }
 
@@ -97,7 +105,7 @@ impl Player {
             self.speed.x *= -1;
         }
         self.speed.y = num!(-2.2);
-        mixer.play_sound(SoundChannel::new(super::JUMP_SFX));
+        mixer.play_sound(SoundChannel::new(JUMP_SFX));
     }
 
     pub fn update_sprite(&mut self) {
@@ -108,13 +116,13 @@ impl Player {
         }
 
         self.sprite = if self.speed.y < num!(-0.1) {
-            super::sprites::JUMPING.animation_frame(&mut self.frame, 2)
+            sprites::JUMPING.animation_frame(&mut self.frame, 2)
         } else if self.speed.y > num!(0.1) {
-            super::sprites::FALLING.animation_frame(&mut self.frame, 2)
+            sprites::FALLING.animation_frame(&mut self.frame, 2)
         } else if self.speed.x.abs() > num!(0.05) {
-            super::sprites::WALKING.animation_frame(&mut self.frame, 2)
+            sprites::WALKING.animation_frame(&mut self.frame, 2)
         } else {
-            super::sprites::STANDING.animation_frame(&mut self.frame, 2)
+            sprites::STANDING.animation_frame(&mut self.frame, 2)
         }
         .into()
     }
@@ -247,7 +255,7 @@ impl Player {
         if !self.was_in_water && in_water {
             self.speed.x = num!(0);
             self.speed.y = num!(-0.03);
-            mixer.play_sound(SoundChannel::new(super::WATER_SFX));
+            mixer.play_sound(SoundChannel::new(WATER_SFX));
         }
 
         if ((touch_left && x_tri == Tri::Negative) || (touch_right && x_tri == Tri::Positive))
@@ -276,7 +284,7 @@ impl Player {
         }
 
         if self.walljump_state == 1 && self.continuous_sfx.is_none() {
-            let mut sfx = SoundChannel::new(super::SLIDE_SFX);
+            let mut sfx = SoundChannel::new(SLIDE_SFX);
             sfx.should_loop();
 
             self.continuous_sfx = mixer.play_sound(sfx);

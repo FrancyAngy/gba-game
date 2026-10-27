@@ -9,12 +9,18 @@ use agb::{
     input::{ButtonController, Tri},
     sound::mixer::Mixer,
 };
+use alloc::{boxed::Box, vec::Vec};
+
+pub mod coin;
+pub mod object_traits;
 
 pub struct World {
     pub level: &'static super::level::Level,
     pub bg: InfiniteScrolledMap,
     pub player: super::player::Player,
     pub started: bool,
+    pub entities: Vec<Box<dyn object_traits::Entity>>,
+    pub collectibles: Vec<Box<dyn object_traits::Collectible>>,
     bg_pos: Vector2D<i32>,
 }
 
@@ -34,6 +40,8 @@ impl World {
             player: super::player::Player::new(level.player_start.into()),
             bg_pos: vec2(0, 0),
             started: true,
+            entities: Vec::with_capacity(32),
+            collectibles: Vec::with_capacity(64),
         }
     }
 
@@ -58,6 +66,12 @@ impl World {
         self.bg.show(frame);
         if self.started {
             self.player.show(frame);
+            for entity in &self.entities {
+                entity.show(frame);
+            }
+            for collectible in &self.collectibles {
+                collectible.show(frame);
+            }
         }
     }
 
@@ -77,6 +91,12 @@ impl World {
         self.set_pos(self.bg_pos);
         if self.started {
             self.player.update(buttons, self.level, mixer);
+            for entity in &mut self.entities {
+                entity.update(&mut self.player);
+            }
+            for collectible in &mut self.collectibles {
+                collectible.update();
+            }
         }
     }
 }
