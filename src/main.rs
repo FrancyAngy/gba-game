@@ -23,7 +23,7 @@ use agb::{
 };
 use alloc::boxed::Box;
 
-use crate::world::object_traits::Collectible;
+use crate::world::{heart, object_traits::Collectible};
 
 // By default no_std crates don't get alloc, so you won't be able to use things like Vec
 // until you declare the extern crate. `agb` provides an allocator so it will all work
@@ -51,8 +51,6 @@ WIN => deduplicate "gfx/win.aseprite",
 TITLE => deduplicate "gfx/title.aseprite",
 );
 
-static DEATH_SFX: SoundData = include_wav!("sfx/death.wav");
-
 type Number = Num<i32, 8>;
 type Vector = Vector2D<Number>;
 
@@ -70,8 +68,7 @@ fn main(mut gba: agb::Gba) -> ! {
     gfx.set_background_palettes(tiles::PALETTES);
 
     let mut level = 0;
-    let mut lives = START_LIVES;
-    let mut world = world::World::new(levels::LEVELS[level]);
+    let mut world = world::World::new(levels::LEVELS[level], START_LIVES);
     let mut respawn_timer = 0;
     let mut game_status = Tri::Zero;
     let mut status_setup = false;
@@ -109,7 +106,7 @@ fn main(mut gba: agb::Gba) -> ! {
                 }
 
                 for i in 0..(START_LIVES as i32) {
-                    let tile = if i < lives as i32 { 5 } else { 4 };
+                    let tile = if i < world.player.lives as i32 { 5 } else { 4 };
                     player_health_background.set_tile(
                         (i + 5, 0),
                         &tiles::HEALTH.tiles,
@@ -125,23 +122,21 @@ fn main(mut gba: agb::Gba) -> ! {
                         if level == levels::LEVELS.len() {
                             game_status = Tri::Positive;
                         } else {
-                            world = world::World::new(levels::LEVELS[level]);
+                            world = world::World::new(levels::LEVELS[level], world.player.lives);
                         }
                     }
 
                     if world.spike_hit() || world.collides() == Tri::Negative {
-                        mixer.play_sound(SoundChannel::new(DEATH_SFX));
-                        lives -= 1;
                         respawn_timer = RESPAWN_TIME;
                         world.player.die(&mut mixer);
                     }
                 } else {
                     respawn_timer -= 1;
                     if respawn_timer == 0 {
-                        if lives == 0 {
+                        if world.player.lives == 0 {
                             game_status = Tri::Negative;
                         } else {
-                            world = world::World::new(levels::LEVELS[level]);
+                            world = world::World::new(levels::LEVELS[level], world.player.lives);
                         }
                     }
                 }
@@ -161,9 +156,8 @@ fn main(mut gba: agb::Gba) -> ! {
                     if buttons.is_just_pressed(Button::A) {
                         game_status = Tri::Zero;
                         status_setup = false;
-                        lives = START_LIVES;
                         level = 0;
-                        world = world::World::new(levels::LEVELS[level]);
+                        world = world::World::new(levels::LEVELS[level], START_LIVES);
                     }
                 }
             }

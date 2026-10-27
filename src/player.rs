@@ -3,7 +3,7 @@ use agb::{
         GraphicsFrame, Priority,
         object::{Object, SpriteVram},
     },
-    fixnum::{Vector2D, num, vec2},
+    fixnum::{Rect, Vector2D, num, rect, vec2},
     include_aseprite, include_wav,
     input::{Button, ButtonController, Tri},
     sound::mixer::{ChannelId, Mixer, SoundChannel, SoundData},
@@ -21,6 +21,7 @@ static WATER_SFX: SoundData = include_wav!("sfx/water.wav");
 static JUMP_SFX: SoundData = include_wav!("sfx/jump.wav");
 static SWIM_SFX: SoundData = include_wav!("sfx/swim.wav");
 static SLIDE_SFX: SoundData = include_wav!("sfx/slide.wav");
+static DEATH_SFX: SoundData = include_wav!("sfx/death.wav");
 
 pub struct Player {
     pub pos: super::Vector,
@@ -31,14 +32,16 @@ pub struct Player {
     pub was_in_water: bool,
     pub hide: bool,
     pub walljump_state: i32,
-    pub continuous_sfx: Option<ChannelId>,
-    pub continuous_sfx_id: ContinuousSfxId,
+    pub collision_rect: Rect<i32>,
+    pub lives: usize,
+    continuous_sfx: Option<ChannelId>,
+    continuous_sfx_id: ContinuousSfxId,
     can_jump: i32,
     walljump_timer: i32,
 }
 
 impl Player {
-    pub fn new(start: Vector2D<i32>) -> Self {
+    pub fn new(start: Vector2D<i32>, lives: usize) -> Self {
         Player {
             pos: start.change_base(),
             speed: vec2(num!(0), num!(0)),
@@ -51,17 +54,21 @@ impl Player {
             walljump_state: 0,
             walljump_timer: 0,
             continuous_sfx: None,
+            lives: lives,
             continuous_sfx_id: ContinuousSfxId::None,
+            collision_rect: rect(start - vec2(5, 5), vec2(8, 13)),
         }
     }
 
     pub fn die(&mut self, mixer: &mut Mixer) {
         self.hide = true;
+        self.lives -= 1;
         if let Some(id) = self.continuous_sfx.take() {
             if let Some(channel) = mixer.channel(&id) {
                 channel.stop();
             }
         }
+        mixer.play_sound(SoundChannel::new(DEATH_SFX));
     }
 
     pub fn show(&self, frame: &mut GraphicsFrame) {
@@ -116,13 +123,13 @@ impl Player {
         }
 
         self.sprite = if self.speed.y < num!(-0.1) {
-            sprites::JUMPING.animation_frame(&mut self.frame, 2)
+            sprites::JUMPING.animation_sprite(self.frame)
         } else if self.speed.y > num!(0.1) {
-            sprites::FALLING.animation_frame(&mut self.frame, 2)
+            sprites::FALLING.animation_sprite(self.frame)
         } else if self.speed.x.abs() > num!(0.05) {
-            sprites::WALKING.animation_frame(&mut self.frame, 2)
+            sprites::WALKING.animation_sprite(self.frame)
         } else {
-            sprites::STANDING.animation_frame(&mut self.frame, 2)
+            sprites::STANDING.animation_sprite(self.frame)
         }
         .into()
     }
@@ -203,6 +210,7 @@ impl Player {
         let touch_left = self.touches_left_wall(level);
         let touch_right = self.touches_right_wall(level);
         let x_tri = buttons.x_tri();
+        let pos_floor = self.pos.floor();
 
         if on_ground && (self.can_jump != 10 || self.walljump_state == 2) {
             self.can_jump = 10;
@@ -303,6 +311,7 @@ impl Player {
         }
 
         self.handle_collision(level);
+        self.collision_rect = rect(pos_floor - vec2(5, 5), vec2(8, 13));
 
         self.update_sprite();
 

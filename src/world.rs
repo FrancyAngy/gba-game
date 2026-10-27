@@ -12,6 +12,7 @@ use agb::{
 use alloc::{boxed::Box, vec::Vec};
 
 pub mod coin;
+pub mod heart;
 pub mod object_traits;
 
 pub struct World {
@@ -25,7 +26,7 @@ pub struct World {
 }
 
 impl World {
-    pub fn new(level: &'static super::level::Level) -> Self {
+    pub fn new(level: &'static super::level::Level, lives: usize) -> Self {
         let bg = RegularBackground::new(
             Priority::P2,
             RegularBackgroundSize::Background32x32,
@@ -37,7 +38,7 @@ impl World {
         World {
             level,
             bg,
-            player: super::player::Player::new(level.player_start.into()),
+            player: super::player::Player::new(level.player_start.into(), lives),
             bg_pos: vec2(0, 0),
             started: true,
             entities: Vec::with_capacity(32),
@@ -91,12 +92,24 @@ impl World {
         self.set_pos(self.bg_pos);
         if self.started {
             self.player.update(buttons, self.level, mixer);
+
             for entity in &mut self.entities {
-                entity.update(&mut self.player);
+                if self.player.collision_rect.touches(entity.get_rect()) {
+                    entity.handle_player_collision(&mut self.player, mixer);
+                }
             }
-            for collectible in &mut self.collectibles {
+            self.entities
+                .retain_mut(|entity| entity.update(&mut self.player, mixer));
+
+            self.collectibles.retain_mut(|collectible| {
                 collectible.update();
-            }
+                if self.player.collision_rect.touches(collectible.get_rect()) {
+                    collectible.handle_collection(&mut self.player, mixer);
+                    false
+                } else {
+                    true
+                }
+            });
         }
     }
 }

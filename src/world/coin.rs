@@ -3,13 +3,13 @@ use agb::{
         GraphicsFrame, Priority,
         object::{Object, SpriteVram},
     },
-    fixnum::Vector2D,
-    include_aseprite,
+    fixnum::{Vector2D, rect, vec2},
+    include_aseprite, include_wav,
+    sound::mixer::{SoundChannel, SoundData},
 };
 
-use crate::Vector;
-
 include_aseprite!(mod sprites, "gfx/coin.aseprite");
+static COIN_SFX: SoundData = include_wav!("sfx/coin.wav");
 
 pub struct Coin {
     pub pos: Vector2D<i32>,
@@ -24,17 +24,16 @@ impl Coin {
 }
 
 impl super::object_traits::Collectible for Coin {
-    fn new(pos: Vector) -> Self {
+    fn new(pos: Vector2D<i32>) -> Self {
         Coin {
-            pos: pos.floor(),
+            pos: pos,
             sprite: sprites::SPIN.sprite(0).into(),
             frame: 0,
         }
     }
 
-    fn update(&mut self) -> bool {
+    fn update(&mut self) {
         self.update_sprite();
-        true
     }
 
     fn show(&self, frame: &mut GraphicsFrame) {
@@ -42,5 +41,17 @@ impl super::object_traits::Collectible for Coin {
             .set_pos(self.pos)
             .set_priority(Priority::P2)
             .show(frame);
+    }
+
+    fn get_rect(&self) -> agb::fixnum::Rect<i32> {
+        rect(self.pos, vec2(8, 8))
+    }
+
+    fn handle_collection(
+        &mut self,
+        _player: &mut crate::player::Player,
+        mixer: &mut agb::sound::mixer::Mixer,
+    ) {
+        mixer.play_sound(SoundChannel::new(COIN_SFX));
     }
 }
