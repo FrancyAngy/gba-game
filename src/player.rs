@@ -34,6 +34,7 @@ pub struct Player {
     pub walljump_state: i32,
     pub collision_rect: Rect<i32>,
     pub lives: usize,
+    pub has_key: bool,
     continuous_sfx: Option<ChannelId>,
     continuous_sfx_id: ContinuousSfxId,
     can_jump: i32,
@@ -57,6 +58,7 @@ impl Player {
             lives: lives,
             continuous_sfx_id: ContinuousSfxId::None,
             collision_rect: rect(start - vec2(5, 5), vec2(8, 13)),
+            has_key: false,
         }
     }
 

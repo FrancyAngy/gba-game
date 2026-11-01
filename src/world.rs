@@ -5,14 +5,22 @@ use agb::{
             InfiniteScrolledMap, RegularBackground, RegularBackgroundSize, TileFormat, TileSetting,
         },
     },
+    eprintln,
     fixnum::{Vector2D, vec2},
+    include_wav,
     input::{ButtonController, Tri},
-    sound::mixer::Mixer,
+    println,
+    sound::mixer::{Mixer, SoundData},
 };
 use alloc::{boxed::Box, vec::Vec};
+use object_traits::{Collectible, Entity};
+
+pub static COLLECT_SFX: SoundData = include_wav!("sfx/collect.wav");
 
 pub mod coin;
+pub mod door;
 pub mod heart;
+pub mod key;
 pub mod object_traits;
 
 pub struct World {
@@ -35,14 +43,48 @@ impl World {
 
         let bg = InfiniteScrolledMap::new(bg);
 
+        let mut collectibles: Vec<Box<dyn Collectible>> = Vec::with_capacity(64);
+        let mut entities: Vec<Box<dyn Entity>> = Vec::with_capacity(16);
+
+        for collectible in level.collectibles {
+            match collectible[0] {
+                1 => collectibles.push(Box::new(heart::Heart::new(vec2(
+                    collectible[1],
+                    collectible[2],
+                )))),
+                2 => collectibles.push(Box::new(coin::Coin::new(vec2(
+                    collectible[1],
+                    collectible[2],
+                )))),
+                3 => collectibles.push(Box::new(key::Key::new(vec2(
+                    collectible[1],
+                    collectible[2],
+                )))),
+                _ => eprintln!(
+                    "Error: no matching collecrible was found for collectible id {} at position: x: {} y: {}",
+                    collectible[0], collectible[1], collectible[2]
+                ),
+            }
+        }
+
+        for entity in level.entities {
+            match entity[0] {
+                1 => entities.push(Box::new(door::Door::new(vec2(entity[1], entity[2])))),
+                _ => eprintln!(
+                    "Error: no matching entity was found for entity id {} at position: x: {} y: {}",
+                    entity[0], entity[1], entity[2]
+                ),
+            }
+        }
+
         World {
             level,
             bg,
             player: super::player::Player::new(level.player_start.into(), lives),
             bg_pos: vec2(0, 0),
             started: true,
-            entities: Vec::with_capacity(32),
-            collectibles: Vec::with_capacity(64),
+            entities,
+            collectibles,
         }
     }
 

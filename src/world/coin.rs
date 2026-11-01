@@ -4,12 +4,11 @@ use agb::{
         object::{Object, SpriteVram},
     },
     fixnum::{Vector2D, rect, vec2},
-    include_aseprite, include_wav,
-    sound::mixer::{SoundChannel, SoundData},
+    include_aseprite,
+    sound::mixer::SoundChannel,
 };
 
 include_aseprite!(mod sprites, "gfx/coin.aseprite");
-static COIN_SFX: SoundData = include_wav!("sfx/coin.wav");
 
 pub struct Coin {
     pub pos: Vector2D<i32>,
@@ -52,6 +51,6 @@ impl super::object_traits::Collectible for Coin {
         _player: &mut crate::player::Player,
         mixer: &mut agb::sound::mixer::Mixer,
     ) {
-        mixer.play_sound(SoundChannel::new(COIN_SFX));
+        mixer.play_sound(SoundChannel::new(super::COLLECT_SFX));
     }
 }

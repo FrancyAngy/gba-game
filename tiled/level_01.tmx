@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="30" height="20" tilewidth="8" tileheight="8" infinite="0" nextlayerid="3" nextobjectid="2">
+<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="30" height="20" tilewidth="8" tileheight="8" infinite="0" nextlayerid="3" nextobjectid="8">
  <tileset firstgid="1" source="tileset.tsx"/>
  <layer id="1" name="Level" width="30" height="20">
   <data encoding="csv">
@@ -27,6 +27,15 @@
  </layer>
  <objectgroup id="2" name="Objects">
   <object id="1" name="PLAYER" x="31.8594" y="128.111">
+   <point/>
+  </object>
+  <object id="2" type="COIN" x="112" y="80">
+   <point/>
+  </object>
+  <object id="3" type="COIN" x="120" y="80">
+   <point/>
+  </object>
+  <object id="6" type="COIN" x="136" y="112">
    <point/>
   </object>
  </objectgroup>

@@ -1,12 +1,15 @@
 {
-    "activeFile": "level_07.tmx",
+    "activeFile": "level_08.tmx",
     "expandedProjectPaths": [
         "."
     ],
     "fileStates": {
         "level_01.tmx": {
+            "expandedObjectLayers": [
+                2
+            ],
             "scale": 4.457083333333333,
-            "selectedLayer": 0,
+            "selectedLayer": 1,
             "viewCenter": {
                 "x": 120.0336542955969,
                 "y": 80.09722352061327
@@ -66,10 +69,21 @@
         },
         "level_07.tmx": {
             "scale": 4,
-            "selectedLayer": 0,
+            "selectedLayer": 1,
             "viewCenter": {
-                "x": 125.5,
-                "y": 80.75
+                "x": 120,
+                "y": 80
+            }
+        },
+        "level_08.tmx": {
+            "expandedObjectLayers": [
+                2
+            ],
+            "scale": 4.457083333333333,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 120.0336542955969,
+                "y": 80.09722352061327
             }
         },
         "tileset.tsx": {
@@ -92,7 +106,8 @@
         "level_04.tmx",
         "level_05.tmx",
         "level_06.tmx",
-        "level_07.tmx"
+        "level_07.tmx",
+        "level_08.tmx"
     ],
     "project": "platform.tiled-project",
     "property.type": "bool",
@@ -104,7 +119,8 @@
         "level_04.tmx",
         "level_05.tmx",
         "level_06.tmx",
-        "level_07.tmx"
+        "level_07.tmx",
+        "level_08.tmx"
     ],
     "tileset.lastUsedFormat": "tsx",
     "tileset.tileSize": {

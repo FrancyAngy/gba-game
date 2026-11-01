@@ -21,10 +21,8 @@ use agb::{
     input::{Button, ButtonController, Tri},
     sound::mixer::{Frequency, SoundChannel, SoundData},
 };
-use alloc::boxed::Box;
 
 use crate::world::{heart, object_traits::Collectible};
-
 // By default no_std crates don't get alloc, so you won't be able to use things like Vec
 // until you declare the extern crate. `agb` provides an allocator so it will all work
 extern crate alloc;

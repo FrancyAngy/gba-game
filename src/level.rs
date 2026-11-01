@@ -14,6 +14,8 @@ pub struct Level {
     pub water_map: &'static [u8],
     pub water_top_map: &'static [u8],
     pub player_start: (i32, i32),
+    pub collectibles: &'static [[i32; 3]],
+    pub entities: &'static [[i32; 3]],
 }
 
 impl Level {

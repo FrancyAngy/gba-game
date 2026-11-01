@@ -14,12 +14,13 @@ struct BuildResourceReader;
 
 static LEVELS: &[&str] = &[
     "level_01.tmx",
-    "level_02.tmx",
-    "level_03.tmx",
-    "level_04.tmx",
-    "level_05.tmx",
-    "level_06.tmx",
-    "level_07.tmx",
+    //   "level_02.tmx",
+    //    "level_03.tmx",
+    //    "level_04.tmx",
+    //    "level_05.tmx",
+    //    "level_06.tmx",
+    //    "level_07.tmx",
+    "level_08.tmx",
 ];
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -87,6 +88,12 @@ impl ResourceReader for BuildResourceReader {
 }
 
 #[derive(Debug, Clone, Copy)]
+struct ObjectInfo {
+    id: u32,
+    pos: (i32, i32),
+}
+
+#[derive(Debug, Clone, Copy)]
 struct TileInfo {
     id: Option<u32>,
     colliding: bool,
@@ -101,6 +108,15 @@ struct Level {
     size: (u32, u32),
     tiles: Vec<TileInfo>,
     player_start: (i32, i32),
+    collectibles: Vec<ObjectInfo>,
+    entities: Vec<ObjectInfo>,
+}
+
+impl ToTokens for ObjectInfo {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        let (id, (x, y)) = (self.id as i32, self.pos);
+        quote! { [#id, #x, #y] }.to_tokens(tokens);
+    }
 }
 
 impl ToTokens for Level {
@@ -146,6 +162,9 @@ impl ToTokens for Level {
         let (player_x, player_y) = self.player_start;
         let (width, height) = self.size;
 
+        let collectibles = &self.collectibles;
+        let entities = &self.entities;
+
         quote! {
             Level {
                 width: #width,
@@ -157,6 +176,8 @@ impl ToTokens for Level {
                 water_map: &[#(#water_map),*],
                 water_top_map: &[#(#water_top_map),*],
                 player_start: (#player_x, #player_y),
+                collectibles: &[#(#collectibles),*],
+                entities: &[#(#entities),*],
             }
         }
         .to_tokens(tokens)
@@ -238,6 +259,43 @@ fn import_level(level: &str) -> Result<Level, Box<dyn Error>> {
         .find(|x| x.name == "PLAYER")
         .expect("Should be able to find the player");
 
+    let mut collectibles: Vec<ObjectInfo> = vec![];
+    let mut entities: Vec<ObjectInfo> = vec![];
+
+    for obj in objs.objects() {
+        match obj.user_type.as_str() {
+            "HEART" => {
+                collectibles.push(ObjectInfo {
+                    id: 1,
+                    pos: (obj.x as i32, obj.y as i32),
+                });
+            }
+
+            "COIN" => {
+                collectibles.push(ObjectInfo {
+                    id: 2,
+                    pos: (obj.x as i32, obj.y as i32),
+                });
+            }
+
+            "KEY" => {
+                collectibles.push(ObjectInfo {
+                    id: 3,
+                    pos: (obj.x as i32, obj.y as i32),
+                });
+            }
+
+            "DOOR" => {
+                entities.push(ObjectInfo {
+                    id: 1,
+                    pos: (obj.x as i32, obj.y as i32),
+                });
+            }
+
+            _ => {}
+        }
+    }
+
     let player_x = player.x as i32;
     let player_y = player.y as i32;
 
@@ -245,6 +303,8 @@ fn import_level(level: &str) -> Result<Level, Box<dyn Error>> {
         size: (width, height),
         tiles,
         player_start: (player_x, player_y),
+        collectibles,
+        entities,
     })
 }
 
