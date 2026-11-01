@@ -14,13 +14,14 @@ struct BuildResourceReader;
 
 static LEVELS: &[&str] = &[
     "level_01.tmx",
-    "level_02.tmx",
-    "level_03.tmx",
-    "level_04.tmx",
-    "level_05.tmx",
-    "level_06.tmx",
-    "level_07.tmx",
-    "level_08.tmx",
+    //    "level_02.tmx",
+    //    "level_03.tmx",
+    //    "level_04.tmx",
+    //    "level_05.tmx",
+    //    "level_06.tmx",
+    //    "level_07.tmx",
+    //    "level_08.tmx",
+    "level_09.tmx",
 ];
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -288,6 +289,13 @@ fn import_level(level: &str) -> Result<Level, Box<dyn Error>> {
             "DOOR" => {
                 entities.push(ObjectInfo {
                     id: 1,
+                    pos: (obj.x as i32, obj.y as i32),
+                });
+            }
+
+            "WALKER" => {
+                entities.push(ObjectInfo {
+                    id: 2,
                     pos: (obj.x as i32, obj.y as i32),
                 });
             }

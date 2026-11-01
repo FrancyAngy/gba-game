@@ -1,5 +1,5 @@
 {
-    "activeFile": "level_08.tmx",
+    "activeFile": "tileset.tsx",
     "expandedProjectPaths": [
         "."
     ],
@@ -99,6 +99,11 @@
     "map.tileWidth": 8,
     "map.width": 30,
     "openFiles": [
+        "tileset.tsx"
+    ],
+    "project": "platform.tiled-project",
+    "property.type": "bool",
+    "recentFiles": [
         "tileset.tsx",
         "level_01.tmx",
         "level_02.tmx",
@@ -108,19 +113,6 @@
         "level_06.tmx",
         "level_07.tmx",
         "level_08.tmx"
-    ],
-    "project": "platform.tiled-project",
-    "property.type": "bool",
-    "recentFiles": [
-        "level_01.tmx",
-        "level_02.tmx",
-        "level_03.tmx",
-        "level_04.tmx",
-        "level_05.tmx",
-        "level_06.tmx",
-        "level_07.tmx",
-        "level_08.tmx",
-        "tileset.tsx"
     ],
     "tileset.lastUsedFormat": "tsx",
     "tileset.tileSize": {

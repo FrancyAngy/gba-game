@@ -7,6 +7,8 @@ use agb::{
     include_aseprite, println,
 };
 
+use crate::level::Level;
+
 pub struct Door {
     pos: Vector2D<i32>,
     sprite: SpriteVram,
@@ -25,8 +27,9 @@ impl Door {
 impl super::object_traits::Entity for Door {
     fn update(
         &mut self,
-        player: &mut crate::player::Player,
-        mixer: &mut agb::sound::mixer::Mixer,
+        _player: &mut crate::player::Player,
+        _mixer: &mut agb::sound::mixer::Mixer,
+        _level: &Level,
     ) -> bool {
         self.update_sprite();
         self.closed

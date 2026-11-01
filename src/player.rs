@@ -39,6 +39,7 @@ pub struct Player {
     pub collision_rect: Rect<i32>,
     pub lives: usize,
     pub keys: i32,
+    pub dead: bool,
     continuous_sfx: Option<ChannelId>,
     continuous_sfx_id: ContinuousSfxId,
     can_jump: i32,
@@ -55,6 +56,7 @@ impl Player {
             flipped: false,
             was_in_water: false,
             hide: false,
+            dead: false,
             can_jump: 0,
             walljump_state: 0,
             walljump_timer: 0,
@@ -67,7 +69,7 @@ impl Player {
     }
 
     pub fn die(&mut self, mixer: &mut Mixer) {
-        self.hide = true;
+        self.dead = true;
         self.lives -= 1;
         if let Some(id) = self.continuous_sfx.take() {
             if let Some(channel) = mixer.channel(&id) {
@@ -78,7 +80,7 @@ impl Player {
     }
 
     pub fn show(&self, frame: &mut GraphicsFrame) {
-        if !self.hide {
+        if !self.hide && !self.dead {
             Object::new(self.sprite.clone())
                 .set_hflip(self.flipped)
                 .set_pos(self.pos.round() - vec2(8, 8))

@@ -4,11 +4,12 @@ use agb::{
     sound::mixer::{Mixer, SoundChannel},
 };
 
-use crate::player::Player;
+use crate::{level::Level, player::Player};
 
 pub enum EntityType {
     None,
     Door,
+    Walker,
 }
 
 pub trait Entity {
@@ -16,7 +17,7 @@ pub trait Entity {
     where
         Self: Sized;
     fn get_type(&self) -> EntityType;
-    fn update(&mut self, player: &mut Player, mixer: &mut Mixer) -> bool {
+    fn update(&mut self, player: &mut Player, mixer: &mut Mixer, level: &Level) -> bool {
         true
     }
     fn handle_player_collision(&mut self, player: &mut Player, mixer: &mut Mixer) {}

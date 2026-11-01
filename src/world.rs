@@ -9,7 +9,6 @@ use agb::{
     fixnum::{Vector2D, num, rect, vec2},
     include_wav,
     input::{ButtonController, Tri},
-    println,
     sound::mixer::{Mixer, SoundData},
 };
 use alloc::{boxed::Box, vec::Vec};
@@ -24,6 +23,7 @@ pub mod door;
 pub mod heart;
 pub mod key;
 pub mod object_traits;
+pub mod walker;
 
 pub struct World {
     pub level: &'static super::level::Level,
@@ -72,6 +72,7 @@ impl World {
         for entity in level.entities {
             match entity[0] {
                 1 => entities.push(Box::new(door::Door::new(vec2(entity[1], entity[2])))),
+                2 => entities.push(Box::new(walker::Walker::new(vec2(entity[1], entity[2])))),
                 _ => eprintln!(
                     "Error: no matching entity was found for entity id {} at position: x: {} y: {}",
                     entity[0], entity[1], entity[2]
@@ -189,7 +190,7 @@ impl World {
             }
 
             self.entities
-                .retain_mut(|entity| entity.update(&mut self.player, mixer));
+                .retain_mut(|entity| entity.update(&mut self.player, mixer, &self.level));
 
             self.collectibles.retain_mut(|collectible| {
                 collectible.update();
@@ -200,6 +201,10 @@ impl World {
                     true
                 }
             });
+
+            if !self.player.dead && (self.collides() == Tri::Negative || self.spike_hit()) {
+                self.player.die(mixer);
+            }
         }
     }
 }

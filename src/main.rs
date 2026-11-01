@@ -124,9 +124,8 @@ fn main(mut gba: agb::Gba) -> ! {
                         }
                     }
 
-                    if world.spike_hit() || world.collides() == Tri::Negative {
+                    if world.player.dead {
                         respawn_timer = RESPAWN_TIME;
-                        world.player.die(&mut mixer);
                     }
                 } else {
                     respawn_timer -= 1;
