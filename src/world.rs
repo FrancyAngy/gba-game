@@ -6,7 +6,7 @@ use agb::{
         },
     },
     eprintln,
-    fixnum::{Vector2D, vec2},
+    fixnum::{Vector2D, num, rect, vec2},
     include_wav,
     input::{ButtonController, Tri},
     println,
@@ -14,6 +14,8 @@ use agb::{
 };
 use alloc::{boxed::Box, vec::Vec};
 use object_traits::{Collectible, Entity};
+
+use crate::player;
 
 pub static COLLECT_SFX: SoundData = include_wav!("sfx/collect.wav");
 
@@ -133,11 +135,45 @@ impl World {
     pub fn update(&mut self, buttons: &ButtonController, mixer: &mut Mixer) {
         self.set_pos(self.bg_pos);
         if self.started {
+            let old_rect = self.player.collision_rect;
             self.player.update(buttons, self.level, mixer);
-
             for entity in &mut self.entities {
                 if self.player.collision_rect.touches(entity.get_rect()) {
                     entity.handle_player_collision(&mut self.player, mixer);
+                    if entity.is_solid() {
+                        if old_rect.touches(entity.get_rect()) {
+                            self.player.push_out(entity.get_rect(), self.level);
+                        } else {
+                            let x_touches = rect(
+                                vec2(self.player.pos.floor().x, old_rect.position.y)
+                                    - player::RECT_OFFSET,
+                                player::RECT_SIZE,
+                            )
+                            .touches(entity.get_rect());
+
+                            let y_touches = rect(
+                                vec2(old_rect.position.x, self.player.pos.floor().y)
+                                    - player::RECT_OFFSET,
+                                player::RECT_SIZE,
+                            )
+                            .touches(entity.get_rect());
+
+                            if x_touches {
+                                self.player.speed.x = num!(0);
+                            }
+
+                            if y_touches {
+                                self.player.speed.y = num!(0)
+                            }
+
+                            if !y_touches && !x_touches {
+                                self.player.speed = vec2(num!(0), num!(0));
+                            }
+                            let pos = old_rect.position + player::RECT_OFFSET;
+
+                            self.player.pos = pos.change_base();
+                        }
+                    }
                 }
             }
 

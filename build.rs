@@ -14,12 +14,12 @@ struct BuildResourceReader;
 
 static LEVELS: &[&str] = &[
     "level_01.tmx",
-    //   "level_02.tmx",
-    //    "level_03.tmx",
-    //    "level_04.tmx",
-    //    "level_05.tmx",
-    //    "level_06.tmx",
-    //    "level_07.tmx",
+    "level_02.tmx",
+    "level_03.tmx",
+    "level_04.tmx",
+    "level_05.tmx",
+    "level_06.tmx",
+    "level_07.tmx",
     "level_08.tmx",
 ];
 

@@ -50,7 +50,7 @@ impl super::Collectible for Key {
         player: &mut crate::player::Player,
         mixer: &mut agb::sound::mixer::Mixer,
     ) {
-        player.has_key = true;
+        player.keys += 1;
         mixer.play_sound(SoundChannel::new(super::COLLECT_SFX));
     }
 }

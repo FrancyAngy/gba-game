@@ -3,11 +3,13 @@ use agb::{
         GraphicsFrame, Priority,
         object::{Object, SpriteVram},
     },
-    fixnum::{Rect, Vector2D, num, rect, vec2},
+    fixnum::{Num, Rect, Vector2D, num, rect, vec2},
     include_aseprite, include_wav,
     input::{Button, ButtonController, Tri},
     sound::mixer::{ChannelId, Mixer, SoundChannel, SoundData},
 };
+
+use crate::{Number, Vector};
 
 #[derive(Eq, PartialEq)]
 pub enum ContinuousSfxId {
@@ -22,6 +24,8 @@ static JUMP_SFX: SoundData = include_wav!("sfx/jump.wav");
 static SWIM_SFX: SoundData = include_wav!("sfx/swim.wav");
 static SLIDE_SFX: SoundData = include_wav!("sfx/slide.wav");
 static DEATH_SFX: SoundData = include_wav!("sfx/death.wav");
+pub static RECT_OFFSET: Vector2D<i32> = vec2(5, 5);
+pub static RECT_SIZE: Vector2D<i32> = vec2(8, 13);
 
 pub struct Player {
     pub pos: super::Vector,
@@ -34,7 +38,7 @@ pub struct Player {
     pub walljump_state: i32,
     pub collision_rect: Rect<i32>,
     pub lives: usize,
-    pub has_key: bool,
+    pub keys: i32,
     continuous_sfx: Option<ChannelId>,
     continuous_sfx_id: ContinuousSfxId,
     can_jump: i32,
@@ -57,8 +61,8 @@ impl Player {
             continuous_sfx: None,
             lives: lives,
             continuous_sfx_id: ContinuousSfxId::None,
-            collision_rect: rect(start - vec2(5, 5), vec2(8, 13)),
-            has_key: false,
+            collision_rect: rect(start - RECT_OFFSET, RECT_SIZE),
+            keys: 0,
         }
     }
 
@@ -200,6 +204,45 @@ impl Player {
         level.water_top_collision(self.pos.floor() / 8)
     }
 
+    pub fn push_out(&mut self, rect: Rect<i32>, level: &super::level::Level) {
+        let p = self.collision_rect;
+        let options: [(i32, Vector2D<i32>); 4] = [
+            (rect.position.x - (p.position.x + p.size.x), vec2(-1, 0)), // left
+            ((rect.position.x + rect.size.x) - p.position.x, vec2(1, 0)), // right
+            (rect.position.y - (p.position.y + p.size.y), vec2(0, -1)), // up
+            ((rect.position.y + rect.size.y) - p.position.y, vec2(0, 1)), // down
+        ];
+
+        let mut best_direction: Option<(i32, Vector2D<i32>)> = None;
+
+        for (distance, direction) in options {
+            let dist_abs = distance.abs();
+
+            if level.collides(self.collision_rect.position + direction * dist_abs / 8) != Tri::Zero
+            {
+                continue;
+            }
+
+            if best_direction.map_or(true, |(b, _)| dist_abs < b) {
+                best_direction = Some((dist_abs, direction));
+            }
+        }
+
+        if let Some((dist_abs, direction)) = best_direction {
+            if direction.x == 0 && self.speed.y * direction.y < num!(0) {
+                self.speed.y = num!(0);
+            } else if self.speed.x * direction.x < num!(0) {
+                self.speed.x = num!(0);
+            }
+
+            let mut pos: Vector = direction.change_base();
+
+            pos *= dist_abs;
+
+            self.pos += pos;
+        }
+    }
+
     pub fn update(
         &mut self,
         buttons: &ButtonController,
@@ -313,7 +356,7 @@ impl Player {
         }
 
         self.handle_collision(level);
-        self.collision_rect = rect(pos_floor - vec2(5, 5), vec2(8, 13));
+        self.collision_rect = rect(pos_floor - RECT_OFFSET, RECT_SIZE);
 
         self.update_sprite();
 

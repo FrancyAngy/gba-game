@@ -80,7 +80,7 @@
                 2
             ],
             "scale": 4.457083333333333,
-            "selectedLayer": 1,
+            "selectedLayer": 0,
             "viewCenter": {
                 "x": 120.0336542955969,
                 "y": 80.09722352061327
@@ -112,7 +112,6 @@
     "project": "platform.tiled-project",
     "property.type": "bool",
     "recentFiles": [
-        "tileset.tsx",
         "level_01.tmx",
         "level_02.tmx",
         "level_03.tmx",
@@ -120,7 +119,8 @@
         "level_05.tmx",
         "level_06.tmx",
         "level_07.tmx",
-        "level_08.tmx"
+        "level_08.tmx",
+        "tileset.tsx"
     ],
     "tileset.lastUsedFormat": "tsx",
     "tileset.tileSize": {

@@ -22,6 +22,9 @@ pub trait Entity {
     fn handle_player_collision(&mut self, player: &mut Player, mixer: &mut Mixer) {}
     fn handle_entity_collision(&mut self, other: &mut dyn Entity) {}
     fn get_rect(&self) -> Rect<i32>;
+    fn is_solid(&self) -> bool {
+        false
+    }
     fn show(&self, frame: &mut GraphicsFrame);
 }
 
