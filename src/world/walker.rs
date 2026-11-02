@@ -133,7 +133,11 @@ impl super::object_traits::Entity for Walker {
         player.die(mixer);
     }
 
-    fn handle_entity_collision(&mut self, _other: &mut dyn super::object_traits::Entity) {
-        self.speed *= num!(-1);
+    fn handle_entity_collision(&mut self, other: &mut dyn super::object_traits::Entity) {
+        if other.get_type() == super::object_traits::EntityType::Projectile {
+            self.alive = false;
+        } else {
+            self.speed *= num!(-1);
+        }
     }
 }

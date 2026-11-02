@@ -6,10 +6,12 @@ use agb::{
 
 use crate::{level::Level, player::Player};
 
+#[derive(PartialEq, Eq)]
 pub enum EntityType {
-    None,
     Door,
+    Projectile,
     Walker,
+    Jumper,
 }
 
 pub trait Entity {

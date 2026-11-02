@@ -8,7 +8,7 @@ use agb::{
     eprintln,
     fixnum::{Vector2D, num, rect, vec2},
     include_wav,
-    input::{ButtonController, Tri},
+    input::{Button, ButtonController, Tri},
     sound::mixer::{Mixer, SoundData},
 };
 use alloc::{boxed::Box, vec::Vec};
@@ -21,8 +21,10 @@ pub static COLLECT_SFX: SoundData = include_wav!("sfx/collect.wav");
 pub mod coin;
 pub mod door;
 pub mod heart;
+pub mod jumper;
 pub mod key;
 pub mod object_traits;
+pub mod projectile;
 pub mod walker;
 
 pub struct World {
@@ -73,6 +75,7 @@ impl World {
             match entity[0] {
                 1 => entities.push(Box::new(door::Door::new(vec2(entity[1], entity[2])))),
                 2 => entities.push(Box::new(walker::Walker::new(vec2(entity[1], entity[2])))),
+                3 => entities.push(Box::new(jumper::Jumper::new(vec2(entity[1], entity[2])))),
                 _ => eprintln!(
                     "Error: no matching entity was found for entity id {} at position: x: {} y: {}",
                     entity[0], entity[1], entity[2]
@@ -204,6 +207,23 @@ impl World {
 
             if !self.player.dead && (self.collides() == Tri::Negative || self.spike_hit()) {
                 self.player.die(mixer);
+            }
+
+            if !self.player.dead && buttons.is_just_pressed(Button::B) {
+                let mut is_projectile = false;
+                for entity in &self.entities {
+                    if entity.get_type() == object_traits::EntityType::Projectile {
+                        is_projectile = true;
+                    }
+                }
+                if !is_projectile {
+                    self.entities
+                        .push(Box::new(projectile::Projectile::new(vec2(
+                            self.player.pos.floor().x
+                                + (8 * if self.player.flipped { -1 } else { 1 }),
+                            self.player.pos.floor().y,
+                        ))));
+                }
             }
         }
     }

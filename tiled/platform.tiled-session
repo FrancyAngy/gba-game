@@ -1,5 +1,5 @@
 {
-    "activeFile": "tileset.tsx",
+    "activeFile": "level_09.tmx",
     "expandedProjectPaths": [
         "."
     ],
@@ -86,6 +86,14 @@
                 "y": 80.09722352061327
             }
         },
+        "level_09.tmx": {
+            "scale": 4.457083333333333,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 120.0336542955969,
+                "y": 80.09722352061327
+            }
+        },
         "tileset.tsx": {
             "dynamicWrapping": true,
             "scaleInDock": 8,
@@ -99,12 +107,14 @@
     "map.tileWidth": 8,
     "map.width": 30,
     "openFiles": [
-        "tileset.tsx"
+        "tileset.tsx",
+        "level_09.tmx"
     ],
     "project": "platform.tiled-project",
     "property.type": "bool",
     "recentFiles": [
         "tileset.tsx",
+        "level_09.tmx",
         "level_01.tmx",
         "level_02.tmx",
         "level_03.tmx",

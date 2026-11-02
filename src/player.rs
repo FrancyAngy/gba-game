@@ -80,7 +80,7 @@ impl Player {
     }
 
     pub fn show(&self, frame: &mut GraphicsFrame) {
-        if !self.hide && !self.dead {
+        if !self.hide || !self.dead {
             Object::new(self.sprite.clone())
                 .set_hflip(self.flipped)
                 .set_pos(self.pos.round() - vec2(8, 8))
