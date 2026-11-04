@@ -114,7 +114,9 @@ impl World {
     pub fn show(&self, frame: &mut GraphicsFrame) {
         self.bg.show(frame);
         if self.started {
-            self.player.show(frame);
+            if !self.player.dead || !self.player.hide {
+                self.player.show(frame);
+            }
             for entity in &self.entities {
                 entity.show(frame);
             }
@@ -220,7 +222,7 @@ impl World {
                     self.entities
                         .push(Box::new(projectile::Projectile::new(vec2(
                             self.player.pos.floor().x
-                                + (8 * if self.player.flipped { -1 } else { 1 }),
+                                + (4 * if self.player.flipped { -1 } else { 1 }),
                             self.player.pos.floor().y,
                         ))));
                 }

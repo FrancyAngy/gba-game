@@ -120,6 +120,11 @@ fn main(mut gba: agb::Gba) -> ! {
                         if level == levels::LEVELS.len() {
                             game_status = Tri::Positive;
                         } else {
+                            if let Some(id) = world.player.continuous_sfx.take() {
+                                if let Some(channel) = mixer.channel(&id) {
+                                    channel.stop();
+                                }
+                            }
                             world = world::World::new(levels::LEVELS[level], world.player.lives);
                         }
                     }

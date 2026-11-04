@@ -40,7 +40,7 @@ pub struct Player {
     pub lives: usize,
     pub keys: i32,
     pub dead: bool,
-    continuous_sfx: Option<ChannelId>,
+    pub continuous_sfx: Option<ChannelId>,
     continuous_sfx_id: ContinuousSfxId,
     can_jump: i32,
     walljump_timer: i32,
@@ -80,7 +80,7 @@ impl Player {
     }
 
     pub fn show(&self, frame: &mut GraphicsFrame) {
-        if !self.hide || !self.dead {
+        if !self.hide && !self.dead {
             Object::new(self.sprite.clone())
                 .set_hflip(self.flipped)
                 .set_pos(self.pos.round() - vec2(8, 8))
