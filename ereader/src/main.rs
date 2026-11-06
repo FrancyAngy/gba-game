@@ -1,9 +1,12 @@
 #![no_std]
 #![no_main]
 
+use core::ffi::CStr;
+
 mod erapi;
 
-static PALETTE: [u16; 2] = [0xFFFF, 0x0000];
+static PALETTE: [u16; 2] = [rgb(0, 0, 0), rgb(255, 255, 255)];
+static RAM_END: u32 = 0x0202_7800;
 
 core::arch::global_asm!(
     ".syntax unified",
@@ -33,6 +36,10 @@ core::arch::global_asm!(
     "    .pool",
 );
 
+unsafe extern "C" {
+    static __end: u8;
+}
+
 #[panic_handler]
 fn panic(_: &core::panic::PanicInfo) -> ! {
     loop {}
@@ -48,18 +55,37 @@ const fn rgb(r: u8, g: u8, b: u8) -> u16 {
 
 #[unsafe(no_mangle)]
 pub extern "C" fn main() -> u32 {
+    erapi::init_memory((RAM_END - (&raw const __end) as u32) >> 10);
+
+    erapi::set_background_palette(&PALETTE, 0);
+
+    erapi::set_background_mode(0);
+    erapi::load_system_background(3, 30);
+
     let region = erapi::Region::create(0, 0, 1, 1, 28, 10);
 
     erapi::fade_in(20);
 
-    erapi::set_background_palette(&PALETTE, 0);
     region.set_text_color(1, 0);
 
     region.draw_text(0, 0, c"Test");
 
-    erapi::render_frame(240);
+    erapi::render_frame(120);
 
-    erapi::fade_out(20);
+    region.draw_text(0, 8, c"Test 2");
 
-    erapi::EXIT_TO_MENU
+    erapi::render_frame(120);
+
+    region.draw_text(0, 16, c"Press B to return to menu");
+    region.draw_text(0, 24, c"Press A to restart");
+
+    loop {
+        if erapi::buttons::get_pressed(erapi::buttons::B) {
+            return erapi::EXIT_TO_MENU;
+        } else if erapi::buttons::get_pressed(erapi::buttons::A) {
+            return erapi::EXIT_RESTART;
+        }
+
+        erapi::render_frame(1);
+    }
 }

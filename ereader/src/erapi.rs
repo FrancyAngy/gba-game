@@ -1,11 +1,9 @@
+#![allow(dead_code)]
 use core::ffi::CStr;
 
 const ERAPI: *const usize = 0x0300_75FC as *const usize;
 
-#[allow(dead_code)]
 pub static EXIT_TO_MENU: u32 = 2;
-
-#[allow(dead_code)]
 pub static EXIT_RESTART: u32 = 0;
 
 pub mod buttons {
@@ -20,6 +18,14 @@ pub mod buttons {
     pub static DOWN: u32 = 0x0080;
     pub static L: u32 = 0x0100;
     pub static R: u32 = 0x0200;
+
+    pub fn get_pressed(button: u32) -> bool {
+        if (super::get_buttons_raw() & button) == button {
+            true
+        } else {
+            false
+        }
+    }
 }
 
 #[inline(always)]
@@ -114,6 +120,12 @@ pub fn render_frame(count: u32) {
     }
 }
 
+pub fn set_background_mode(mode: u32) {
+    unsafe {
+        call2(0x219, mode);
+    }
+}
+
 pub fn set_background_palette(colors: &'static [u16], row: u8) {
     unsafe {
         call4(
@@ -122,6 +134,12 @@ pub fn set_background_palette(colors: &'static [u16], row: u8) {
             row as u32,
             colors.len() as u32,
         );
+    }
+}
+
+pub fn load_system_background(layer: u32, index: u32) {
+    unsafe {
+        call3(0x210, index, layer);
     }
 }
 
@@ -135,4 +153,14 @@ pub fn fade_out(frames: u32) {
     unsafe {
         call2(0x201, frames);
     }
+}
+
+pub fn init_memory(a: u32) {
+    unsafe {
+        call2(0x2EA, a);
+    }
+}
+
+pub fn get_buttons_raw() -> u32 {
+    unsafe { call1(0x302) }
 }
