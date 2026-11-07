@@ -3,21 +3,21 @@ use core::ffi::CStr;
 
 const ERAPI: *const usize = 0x0300_75FC as *const usize;
 
-pub static EXIT_TO_MENU: u32 = 2;
-pub static EXIT_RESTART: u32 = 0;
+pub const EXIT_TO_MENU: u32 = 2;
+pub const EXIT_RESTART: u32 = 0;
 
 pub mod buttons {
     #![allow(dead_code)]
-    pub static A: u32 = 0x0001;
-    pub static B: u32 = 0x0002;
-    pub static SELECT: u32 = 0x0004;
-    pub static START: u32 = 0x0008;
-    pub static RIGHT: u32 = 0x0010;
-    pub static LEFT: u32 = 0x0020;
-    pub static UP: u32 = 0x0040;
-    pub static DOWN: u32 = 0x0080;
-    pub static L: u32 = 0x0100;
-    pub static R: u32 = 0x0200;
+    pub const A: u32 = 0x0001;
+    pub const B: u32 = 0x0002;
+    pub const SELECT: u32 = 0x0004;
+    pub const START: u32 = 0x0008;
+    pub const RIGHT: u32 = 0x0010;
+    pub const LEFT: u32 = 0x0020;
+    pub const UP: u32 = 0x0040;
+    pub const DOWN: u32 = 0x0080;
+    pub const L: u32 = 0x0100;
+    pub const R: u32 = 0x0200;
 
     pub fn get_pressed(button: u32) -> bool {
         if (super::get_buttons_raw() & button) == button {

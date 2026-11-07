@@ -1,9 +1,9 @@
 #![no_std]
 #![no_main]
 
-use core::ffi::CStr;
-
 mod erapi;
+mod link;
+mod protocol;
 
 static PALETTE: [u16; 2] = [rgb(0, 0, 0), rgb(255, 255, 255)];
 static RAM_END: u32 = 0x0202_7800;
