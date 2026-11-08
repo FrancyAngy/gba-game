@@ -164,3 +164,7 @@ pub fn init_memory(a: u32) {
 pub fn get_buttons_raw() -> u32 {
     unsafe { call1(0x302) }
 }
+
+pub fn scan_dot_code(buffer: &mut [u8]) -> u32 {
+    unsafe { call2(0x2C2, buffer.as_mut_ptr() as u32) }
+}

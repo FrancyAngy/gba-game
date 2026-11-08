@@ -2,6 +2,7 @@
 
 pub const CARD_OFFSET: usize = 0x4e;
 pub const CARD_END: usize = 2076;
+pub const SCAN_SUCCESS: u32 = 6;
 
 pub const HANDSHAKE_1: u16 = 0xfbfb;
 pub const HANDSHAKE_2: u16 = 0x5841;
