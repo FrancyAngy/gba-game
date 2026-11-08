@@ -1,3 +1,4 @@
+#![allow(unused_variables)]
 use agb::{
     display::GraphicsFrame,
     fixnum::{Rect, Vector2D},

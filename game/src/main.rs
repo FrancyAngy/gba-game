@@ -22,7 +22,8 @@ use agb::{
     sound::mixer::{Frequency, SoundChannel, SoundData},
 };
 
-use crate::world::{heart, object_traits::Collectible};
+use alloc::{rc::Rc, vec::Vec};
+
 // By default no_std crates don't get alloc, so you won't be able to use things like Vec
 // until you declare the extern crate. `agb` provides an allocator so it will all work
 extern crate alloc;
@@ -65,8 +66,13 @@ fn main(mut gba: agb::Gba) -> ! {
 
     gfx.set_background_palettes(tiles::PALETTES);
 
+    let mut level_list: Vec<Rc<level::Level>> = levels::LEVELS
+        .iter()
+        .map(|l| Rc::new((*l).clone()))
+        .collect();
+
     let mut level = 0;
-    let mut world = world::World::new(levels::LEVELS[level], START_LIVES);
+    let mut world = world::World::new(level_list[level].clone(), START_LIVES);
     let mut respawn_timer = 0;
     let mut game_status = Tri::Zero;
     let mut status_setup = false;
@@ -117,7 +123,7 @@ fn main(mut gba: agb::Gba) -> ! {
 
                     if world.has_won() {
                         level += 1;
-                        if level == levels::LEVELS.len() {
+                        if level == level_list.len() {
                             game_status = Tri::Positive;
                         } else {
                             if let Some(id) = world.player.continuous_sfx.take() {
@@ -125,7 +131,8 @@ fn main(mut gba: agb::Gba) -> ! {
                                     channel.stop();
                                 }
                             }
-                            world = world::World::new(levels::LEVELS[level], world.player.lives);
+                            world =
+                                world::World::new(level_list[level].clone(), world.player.lives);
                         }
                     }
 
@@ -138,7 +145,8 @@ fn main(mut gba: agb::Gba) -> ! {
                         if world.player.lives == 0 {
                             game_status = Tri::Negative;
                         } else {
-                            world = world::World::new(levels::LEVELS[level], world.player.lives);
+                            world =
+                                world::World::new(level_list[level].clone(), world.player.lives);
                         }
                     }
                 }
@@ -159,7 +167,7 @@ fn main(mut gba: agb::Gba) -> ! {
                         game_status = Tri::Zero;
                         status_setup = false;
                         level = 0;
-                        world = world::World::new(levels::LEVELS[level], START_LIVES);
+                        world = world::World::new(level_list[level].clone(), START_LIVES);
                     }
                 }
             }

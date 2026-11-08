@@ -3,19 +3,21 @@ use agb::{
     fixnum::{Rect, Vector2D, rect, vec2},
     input::Tri,
 };
+use alloc::borrow::Cow;
 
+#[derive(Clone)]
 pub struct Level {
     pub width: u32,
     pub height: u32,
-    pub background: &'static [TileSetting],
-    pub collision_map: &'static [u8],
-    pub winning_map: &'static [u8],
-    pub spike_map: &'static [u8],
-    pub water_map: &'static [u8],
-    pub water_top_map: &'static [u8],
+    pub background: Cow<'static, [TileSetting]>,
+    pub collision_map: Cow<'static, [u8]>,
+    pub winning_map: Cow<'static, [u8]>,
+    pub spike_map: Cow<'static, [u8]>,
+    pub water_map: Cow<'static, [u8]>,
+    pub water_top_map: Cow<'static, [u8]>,
     pub player_start: (i32, i32),
-    pub collectibles: &'static [[i32; 3]],
-    pub entities: &'static [[i32; 3]],
+    pub collectibles: Cow<'static, [[i32; 3]]>,
+    pub entities: Cow<'static, [[i32; 3]]>,
 }
 
 impl Level {

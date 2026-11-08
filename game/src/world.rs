@@ -11,7 +11,7 @@ use agb::{
     input::{Button, ButtonController, Tri},
     sound::mixer::{Mixer, SoundData},
 };
-use alloc::{boxed::Box, vec::Vec};
+use alloc::{boxed::Box, rc::Rc, vec::Vec};
 use object_traits::{Collectible, Entity};
 
 use crate::player;
@@ -28,7 +28,7 @@ pub mod projectile;
 pub mod walker;
 
 pub struct World {
-    pub level: &'static super::level::Level,
+    pub level: Rc<super::level::Level>,
     pub bg: InfiniteScrolledMap,
     pub player: super::player::Player,
     pub started: bool,
@@ -38,7 +38,7 @@ pub struct World {
 }
 
 impl World {
-    pub fn new(level: &'static super::level::Level, lives: usize) -> Self {
+    pub fn new(level: Rc<super::level::Level>, lives: usize) -> Self {
         let bg = RegularBackground::new(
             Priority::P2,
             RegularBackgroundSize::Background32x32,
@@ -50,7 +50,7 @@ impl World {
         let mut collectibles: Vec<Box<dyn Collectible>> = Vec::with_capacity(64);
         let mut entities: Vec<Box<dyn Entity>> = Vec::with_capacity(16);
 
-        for collectible in level.collectibles {
+        for collectible in level.collectibles.iter() {
             match collectible[0] {
                 1 => collectibles.push(Box::new(heart::Heart::new(vec2(
                     collectible[1],
@@ -71,7 +71,7 @@ impl World {
             }
         }
 
-        for entity in level.entities {
+        for entity in level.entities.iter() {
             match entity[0] {
                 1 => entities.push(Box::new(door::Door::new(vec2(entity[1], entity[2])))),
                 2 => entities.push(Box::new(walker::Walker::new(vec2(entity[1], entity[2])))),
@@ -83,10 +83,12 @@ impl World {
             }
         }
 
+        let player = super::player::Player::new(level.player_start.into(), lives);
+
         World {
             level,
             bg,
-            player: super::player::Player::new(level.player_start.into(), lives),
+            player,
             bg_pos: vec2(0, 0),
             started: true,
             entities,
@@ -127,11 +129,11 @@ impl World {
     }
 
     pub fn has_won(&self) -> bool {
-        self.player.has_won(self.level)
+        self.player.has_won(&self.level)
     }
 
     pub fn spike_hit(&self) -> bool {
-        self.player.hits_spike(self.level)
+        self.player.hits_spike(&self.level)
     }
 
     pub fn collides(&self) -> Tri {
@@ -142,13 +144,13 @@ impl World {
         self.set_pos(self.bg_pos);
         if self.started {
             let old_rect = self.player.collision_rect;
-            self.player.update(buttons, self.level, mixer);
+            self.player.update(buttons, &self.level, mixer);
             for entity in &mut self.entities {
                 if self.player.collision_rect.touches(entity.get_rect()) {
                     entity.handle_player_collision(&mut self.player, mixer);
                     if entity.is_solid() {
                         if old_rect.touches(entity.get_rect()) {
-                            self.player.push_out(entity.get_rect(), self.level);
+                            self.player.push_out(entity.get_rect(), &self.level);
                         } else {
                             let x_touches = rect(
                                 vec2(self.player.pos.floor().x, old_rect.position.y)

@@ -167,19 +167,21 @@ impl ToTokens for Level {
         let collectibles = &self.collectibles;
         let entities = &self.entities;
 
+        let borrowed = quote! { ::alloc::borrow::Cow::Borrowed };
+
         quote! {
             Level {
                 width: #width,
                 height: #height,
-                background: &[#(#background_tiles),*],
-                collision_map: &[#(#collision_map),*],
-                winning_map: &[#(#winning_map),*],
-                spike_map: &[#(#spike_map),*],
-                water_map: &[#(#water_map),*],
-                water_top_map: &[#(#water_top_map),*],
+                background: #borrowed(&[#(#background_tiles),*]),
+                collision_map: #borrowed(&[#(#collision_map),*]),
+                winning_map: #borrowed(&[#(#winning_map),*]),
+                spike_map: #borrowed(&[#(#spike_map),*]),
+                water_map: #borrowed(&[#(#water_map),*]),
+                water_top_map: #borrowed(&[#(#water_top_map),*]),
                 player_start: (#player_x, #player_y),
-                collectibles: &[#(#collectibles),*],
-                entities: &[#(#entities),*],
+                collectibles: #borrowed(&[#(#collectibles),*]),
+                entities: #borrowed(&[#(#entities),*]),
             }
         }
         .to_tokens(tokens)
