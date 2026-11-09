@@ -20,6 +20,7 @@ pub static COLLECT_SFX: SoundData = include_wav!("sfx/collect.wav");
 
 pub mod coin;
 pub mod door;
+pub mod fish;
 pub mod heart;
 pub mod jumper;
 pub mod key;
@@ -76,6 +77,7 @@ impl World {
                 1 => entities.push(Box::new(door::Door::new(vec2(entity[1], entity[2])))),
                 2 => entities.push(Box::new(walker::Walker::new(vec2(entity[1], entity[2])))),
                 3 => entities.push(Box::new(jumper::Jumper::new(vec2(entity[1], entity[2])))),
+                4 => entities.push(Box::new(fish::Fish::new(vec2(entity[1], entity[2])))),
                 _ => eprintln!(
                     "Error: no matching entity was found for entity id {} at position: x: {} y: {}",
                     entity[0], entity[1], entity[2]

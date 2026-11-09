@@ -13,6 +13,7 @@ pub enum EntityType {
     Projectile,
     Walker,
     Jumper,
+    Fish,
 }
 
 pub trait Entity {

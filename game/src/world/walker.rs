@@ -13,6 +13,7 @@ use crate::{Number, Vector, level::Level};
 pub struct Walker {
     pos: Vector,
     speed: Vector,
+    base_speed: Vector,
     sprite: SpriteVram,
     frame: usize,
     alive: bool,
@@ -73,6 +74,16 @@ impl Walker {
 
         level.collides(check.floor() / 8) == Tri::Positive
     }
+
+    fn in_water(&self, level: &Level) -> bool {
+        level.water_collision(self.pos.floor() / 8)
+    }
+
+    fn on_ground(&self, level: &Level) -> bool {
+        let check = vec2(self.pos.x, self.pos.y + num!(8) + Number::from_raw(1));
+
+        level.collides(check.floor() / 8) == Tri::Positive
+    }
 }
 
 impl super::object_traits::Entity for Walker {
@@ -83,6 +94,7 @@ impl super::object_traits::Entity for Walker {
         Walker {
             pos: start_pos.change_base(),
             speed: vec2(WALKER_SPEED, num!(0)),
+            base_speed: vec2(WALKER_SPEED, num!(0)),
             sprite: sprite::WALK.sprite(0).into(),
             frame: 0,
             alive: true,
@@ -112,13 +124,22 @@ impl super::object_traits::Entity for Walker {
         _mixer: &mut agb::sound::mixer::Mixer,
         level: &Level,
     ) -> bool {
+        if self.in_water(level) {
+            self.alive = false;
+        }
+
         if self.alive {
             self.speed.y += num!(0.18);
             self.handle_collision(level);
             self.update_sprite();
             if self.touches_right_wall(level) || self.touches_left_wall(level) {
                 self.direction *= num!(-1);
-                self.speed.x = self.direction * WALKER_SPEED;
+                self.base_speed.x = self.direction * WALKER_SPEED;
+            }
+            if !self.on_ground(level) {
+                self.speed.x = self.base_speed.x / 3;
+            } else {
+                self.speed.x = self.base_speed.x;
             }
         }
 

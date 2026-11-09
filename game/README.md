@@ -8,6 +8,7 @@ Pressing the A button while you're on the ground will make you jump.
 Pressing the A button in the water will make you swim.
 Touching a wall while in the air, with the A button released and holding the direction of the wall on the d-pad will make you slide.
 While sliding, you can press the opposite direction on the dpad to stop sliding or press the A button to perform a wall jump.
+Pressing B will spawn a projectile moving in the direction you're facing. Useful for killing enemies
 
 ## Building
 The requirements are:

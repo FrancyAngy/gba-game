@@ -13,7 +13,7 @@ pub struct Jumper {
     sprite: SpriteVram,
     frame: usize,
     alive: bool,
-    timer: i32,
+    timer: u32,
 }
 
 include_aseprite!(mod sprite, "gfx/walker.aseprite");
@@ -62,6 +62,10 @@ impl Jumper {
 
         level.collides(check.floor() / 8) == Tri::Positive
     }
+
+    pub fn is_in_water(&self, level: &Level) -> bool {
+        level.water_collision(self.pos.floor() / 8)
+    }
 }
 
 impl super::object_traits::Entity for Jumper {
@@ -104,6 +108,10 @@ impl super::object_traits::Entity for Jumper {
             self.timer -= 1;
         }
 
+        if self.is_in_water(level) {
+            self.alive = false;
+        }
+
         self.pos += self.speed;
 
         self.update_sprite();
@@ -116,7 +124,7 @@ impl super::object_traits::Entity for Jumper {
 
     fn show(&self, frame: &mut agb::display::GraphicsFrame) {
         Object::new(self.sprite.clone())
-            .set_hflip(self.speed.x <= num!(-0.1))
+            .set_hflip(self.speed.x >= num!(-0.1))
             .set_pos(self.pos.floor())
             .show(frame);
     }

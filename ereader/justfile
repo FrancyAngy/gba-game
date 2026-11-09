@@ -1,0 +1,14 @@
+build:
+    cargo build --release
+
+bin: build
+    arm-none-eabi-objcopy -O binary target/thumbv4t-none-eabi/release/ereader-loader loader.bin
+
+vpk: bin
+    nevpk -i loader.bin -o loader.vpk -c -level 0
+
+save: vpk
+    neflmake -i loader.vpk -o loader.sav -type 2 -name "Level loader"
+
+clean:
+    rm -rfv target loader.*
